@@ -20,6 +20,20 @@ def get_token(p0):
     return get_sha512(p0 + ':' + (time.time() * 1000).__int__().__str__())
 
 
+def duu(p0, p1):
+    p0 = hgtk.letter.decompose(p0[0])
+    if p0[0] in ['ㄹ', 'ㄴ', 'ㅇ']:
+
+        if len(p0[2]) == 0:
+            p1.append(hgtk.letter.compose('ㄹ', p0[1]))
+            p1.append(hgtk.letter.compose('ㄴ', p0[1]))
+            p1.append(hgtk.letter.compose('ㅇ', p0[1]))
+        else:
+            p1.append(hgtk.letter.compose('ㄹ', p0[1], p0[2]))
+            p1.append(hgtk.letter.compose('ㄴ', p0[1], p0[2]))
+            p1.append(hgtk.letter.compose('ㅇ', p0[1], p0[2]))
+
+
 @csrf_exempt
 def word_plus(req):
     if req.method == 'POST':
@@ -51,12 +65,9 @@ def make_room(req):
         try:
             req_data = req.POST
             player = req_data['player']
-            print('multipart')
         except:
             req_data = json.loads(req.body.decode("utf-8"))
             player = req_data['player']
-            print('app/json')
-            print(req_data)
         enemy = req_data['enemy']
         level = req_data['level']
 
@@ -99,13 +110,10 @@ def word_game(req):
         try:
             req_data = req.POST
             token = req_data['token']
-            print('multipart')
         except:
             try:
                 req_data = json.loads(req.body.decode("utf-8"))
                 token = req_data['token']
-                print('app/json')
-                print(req_data)
             except:
                 token = req.session['token']
 
@@ -123,17 +131,13 @@ def word_game(req):
                     'code': 1
                 }
             )
-        decompose = hgtk.letter.decompose(word_player[0])
         du = list()
-        if decompose[0] in ['ㄹ', 'ㄴ', 'ㅇ']:
-            du.append(hgtk.letter.compose('ㄹ', decompose[1], decompose[2]))
-            du.append(hgtk.letter.compose('ㄴ', decompose[1], decompose[2]))
-            du.append(hgtk.letter.compose('ㅇ', decompose[1], decompose[2]))
-        print(room.log)
-        print(len(room.log))
+        duu(word_player, du)
+
+        du_next = list()
+        duu(word_player[len(word_player) - 1], du_next)
         if len(room.log) != 0:
             end_word = before_log[len(before_log) - 1][len(before_log[len(before_log) - 1]) - 1]
-
             if (not (end_word in du)) and end_word != word_player[0]:
                 # 왜 끝말을 안쓰시죠?
                 return JsonResponse(
@@ -142,7 +146,15 @@ def word_game(req):
                         'code': 2
                     }
                 )
-
+        else:
+            if not enemy_type.word_set.filter(text__startswith=word_player[len(word_player) - 1]).exists():
+                # 응 처음엔 한방 쓰지
+                return JsonResponse(
+                    {
+                        'success': False,
+                        'code': 5
+                    }
+                )
         if word_player in before_log:
             # 이미 나왔는데수웅
             return JsonResponse(
@@ -162,16 +174,15 @@ def word_game(req):
             )
 
         # 이제 플레이어를 이겨봅시다
-        enemy_can = enemy_type.word_set.all()
+        enemy_ob = enemy_type.word_set.all()
         for i in range(len(before_log)):
-            enemy_can = enemy_can.exclude(text=before_log[i])
+            enemy_ob = enemy_ob.exclude(text=before_log[i])
 
-        if len(du) != 0:
-            enemy_can = enemy_can.filter(text__startswith=du[0])
-            enemy_can.union(enemy_can.filter(text__startswith=du[1]))
-            enemy_can.union(enemy_can.filter(text__startswith=du[2]))
+        if len(du_next) != 0:
+            enemy_can = enemy_ob.filter(text__startswith=du_next[0]) | enemy_ob.filter(
+                text__startswith=du_next[1]) | enemy_ob.filter(text__startswith=du_next[2])
         else:
-            enemy_can = enemy_can.filter(text__startswith=word_player[len(word_player) - 1])
+            enemy_can = enemy_ob.filter(text__startswith=word_player[len(word_player) - 1])
 
         if not enemy_can.exists():
             return JsonResponse(
@@ -194,11 +205,9 @@ def word_game(req):
             player_can = player_type.word_set.all()
             player_can = player_can.exclude(text=word_enemy.text)
 
-            player_can = player_can.filter(text__startswith=word_player[len(word_player) - 1])
-            for i in range(len(before_log)):
-                player_can = player_can.filter(text__startswith=word_player[len(word_player) - 1])
-                player_can = player_can.exclude(text=word_enemy.text[len(word_enemy.text) - 1])
-
+            player_can = player_can.filter(text__startswith=word_enemy.text[len(word_enemy.text) - 1])
+            for i in before_log:
+                player_can = player_can.exclude(text=i)
             room.save()
 
             if not player_can.exists():
@@ -225,49 +234,46 @@ def word_game(req):
             # 널 전적으로 마크해주지
             min_req: int = 99
             min_list = list()
-            player_can = player_type.word_set.all()
+            player_ob = player_type.word_set.all()
+            for i in before_log:
+                player_ob = player_ob.exclude(text=i)
 
             for word in enemy_can:
                 end = word.text[len(word.text) - 1]
-                player_can = player_can.exclude(text=word.text)
-                for i in range(len(before_log)):
-                    player_can = player_can.exclude(text=word.text[len(word.text) - 1])
 
-                player_can = player_can.filter(text__startswith=end)
+                duu_tmp = list()
+                duu(word, duu_tmp)
+                player_can = player_ob.exclude(text=word.text)
+                if len(du_next) != 0:
+                    player_can = player_can.filter(text__startswith=du_next[0]) | player_can.filter(
+                        text__startswith=du_next[1]) | player_can.filter(text__startswith=du_next[2])
+                else:
+                    player_can = player_can.filter(text__startswith=end)
+
                 if len(player_can) == min_req:
                     min_list.append(word)
                 if len(player_can) < min_req:
                     min_req = len(player_can)
                     min_list = list()
                     min_list.append(word)
+                if 0 == min_req:
+                    return JsonResponse(
+                        {
+                            'success': True,
+                            'finish': True,
+                            'word': word.text,
+                            'info': word.info,
+                            'win': 'cpu'
+                        }
+                    )
 
             word_enemy = random.choice(min_list)
 
             # 이건 다음
-
             before_log.append(word_player)
             before_log.append(word_enemy.text)
 
-            room.log = ','.join(before_log)
-
-            player_can = player_can.exclude(text=word_enemy.text)
-            for i in range(len(before_log)):
-                player_can = player_can.exclude(text=word_enemy.text[len(word_enemy.text) - 1])
-
-            player_can = player_can.filter(text__startswith=word_player[len(word_player) - 1])
-
             room.save()
-
-            if not player_can.exists():
-                return JsonResponse(
-                    {
-                        'success': True,
-                        'finish': True,
-                        'word': word_enemy.text,
-                        'info': word_enemy.info,
-                        'win': 'cpu'
-                    }
-                )
 
             return JsonResponse(
                 {
@@ -277,24 +283,3 @@ def word_game(req):
                     'info': word_enemy.info
                 }
             )
-
-
-@csrf_exempt
-def word_search(req):
-    if req.method == 'POST':
-        try:
-            req_data = req.POST
-            print('multipart')
-        except:
-            try:
-                req_data = json.loads(req.body.decode("utf-8"))
-                token = req_data['token']
-                print('app/json')
-            except:
-                # 토큰은 왜 안보내 마
-                return JsonResponse(
-                    {
-                        'success': False,
-                        'code': 0
-                    }
-                )

@@ -25,12 +25,13 @@ INSTALLED_APPS = [
     'django.contrib.sites',
 
     'main',
-    'corsheaders',
-    'my'
+    'corsheaders'
 ]
 CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOW_CREDENTIALS = False
+
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -91,12 +92,13 @@ USE_TZ = True
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
-STATIC_URL = '/static/'
-
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+STATIC_URL = '/static/'
+
+
 STATICFILES_DIRS = [
-    MEDIA_ROOT
+    MEDIA_ROOT,
 ]
