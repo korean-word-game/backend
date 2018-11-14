@@ -1,6 +1,13 @@
 import os
 import json
 
+import os
+
+if os.name == 'nt':  # on windows
+    import pymysql
+
+    pymysql.install_as_MySQLdb()
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -31,8 +38,6 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOW_CREDENTIALS = False
 
-
-
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -62,8 +67,6 @@ TEMPLATES = [
 ]
 
 SITE_ID = 1
-
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -97,7 +100,6 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 STATIC_URL = '/static/'
-
 
 STATICFILES_DIRS = [
     MEDIA_ROOT,
