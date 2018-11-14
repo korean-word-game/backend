@@ -121,7 +121,8 @@ def word_game(req):
                     'code': 1
                 }
             )
-        if len(room.log) != 0 and word_player[0] != before_log[len(before_log) - 1][len(before_log[len(before_log) - 1]) - 1]:
+        if len(room.log) != 0 and word_player[0] != before_log[len(before_log) - 1][
+            len(before_log[len(before_log) - 1]) - 1]:
             # 왜 끝말을 안쓰시죠?
             return JsonResponse(
                 {
@@ -174,6 +175,7 @@ def word_game(req):
             room.log = ','.join(before_log)
 
             player_can = player_type.word_set.all()
+            player_can = player_can.exclude(text=word_enemy.text)
             for i in range(len(before_log)):
                 player_can = player_can.exclude(text=word_enemy.text[len(word_enemy.text) - 1])
 
@@ -202,18 +204,34 @@ def word_game(req):
             )
 
         elif room.level == 1:
-            # 랜덤으로 뽑는 호구봇
+            # 널 전적으로 마크해주지
+            min_req: int = 99
+            min_list = list()
+            player_can = player_type.word_set.all()
 
-            word_enemy = random.choice(enemy_can)
+            for word in enemy_can:
+                end = word.text[len(word.text)-1]
+                player_can = player_can.exclude(text=word.text)
+                for i in range(len(before_log)):
+                    player_can = player_can.exclude(text=word.text[len(word.text) - 1])
 
+                player_can = player_can.filter(text__startswith=end)
+                if len(player_can) == min_req:
+                    min_list.append(word)
+                if len(player_can) < min_req:
+                    min_req = len(player_can)
+                    min_list = list()
 
+            word_enemy = random.choice(min_list)
+
+            # 이건 다음
 
             before_log.append(word_player)
             before_log.append(word_enemy.text)
 
             room.log = ','.join(before_log)
 
-            player_can = player_type.word_set.all()
+            player_can = player_can.exclude(text=word_enemy.text)
             for i in range(len(before_log)):
                 player_can = player_can.exclude(text=word_enemy.text[len(word_enemy.text) - 1])
 
