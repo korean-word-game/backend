@@ -97,8 +97,7 @@ def make_room(req):
                             start=0)
             room.save()
             enemy_type = WordType.objects.get(id=room.enemy)
-            enemy_ob = enemy_type.word_set
-            enemy_can = enemy_ob.all()
+            enemy_can = enemy_type.word_set.all()
             word_enemy = np.random.choice(enemy_can)
             room.log = word_enemy.text
             room.save()
@@ -126,15 +125,12 @@ def word_game(req):
     if req.method == 'POST':
         try:
             req_data = req.POST
-            token = req_data['token']
+            word_player = req_data['word']
         except:
-            try:
-                req_data = json.loads(req.body.decode("utf-8"))
-                token = req_data['token']
-            except:
-                token = req.session['token']
+            req_data = json.loads(req.body.decode("utf-8"))
+            word_player = req_data['word']
 
-        word_player = req_data['word']
+        token = req.session['token']
         print(isHangul(word_player))
         if not isHangul(word_player):
             # 한글자 이하
