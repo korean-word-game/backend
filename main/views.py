@@ -123,57 +123,56 @@ def make_room(req):
 
 
 @csrf_exempt
-def word_game(req):
-    if req.method == 'POST':
+def word_game(request):
+    if request.method == 'POST':
         try:
-            _request_data = req.POST
+            _request_data = request.POST
             word_player = _request_data['word']
         except:
-            _request_data = json.loads(req.body.decode("utf-8"))
+            _request_data = json.loads(request.body.decode("utf-8"))
             word_player = _request_data['word']
+        # word_player: 입력 받은 단어
 
-        token = req.session['token']
-        print(is_hangul(word_player))
-        if not is_hangul(word_player):
-            # 한글자 이하
+        # 입력 받은 단어가 올바른 단어인지 검사
+        if not is_hangul(word_player):  # 한글이 아니면
             return JsonResponse(
                 {
                     'success': False,
                     'code': 0
                 }
             )
-
-        room = GameRoom.objects.get(token=token)
-        before_log = room.log.split(',')
-        player_type = WordType.objects.get(id=room.player)
-        enemy_type = WordType.objects.get(id=room.enemy)
-
-        if len(word_player) <= 1:
-            # 한글자 이하
+        if len(word_player) <= 1:  # 한글자 이하
             return JsonResponse(
                 {
                     'success': False,
                     'code': 1
                 }
             )
+
+        token = request.session['token']
+        room = GameRoom.objects.get(token=token)
+        before_log = room.log.split(',')
+        player_type = WordType.objects.get(id=room.player)
+        enemy_type = WordType.objects.get(id=room.enemy)
+
         du = list()
         duu(word_player, du)
 
         du_next = list()
         duu(word_player[len(word_player) - 1], du_next)
-        if len(room.log) != 0:
-            end_word = before_log[len(before_log) - 1][len(before_log[len(before_log) - 1]) - 1]
-            if (not (end_word in du)) and end_word != word_player[0]:
+        if not len(room.log) == 0:  # 게임 처음 시작이 아니라면
+            end_word = before_log[-1][-1]  # 최근 단어의 가장 마지막 음절
+            if (end_word not in du) and end_word != word_player[0]:
                 # 왜 끝말을 안쓰시죠?
                 return JsonResponse(
                     {
                         'success': False,
-                        'code': 2
+                        'code': 2  # 제대로 끝말을 이으세요!
                     }
                 )
-        else:
-            if not enemy_type.word_set.filter(text__startswith=word_player[len(word_player) - 1]).exists():
-                # 응 처음엔 한방 쓰지
+        else:  # 게임의 처음 시작이라면
+            if not enemy_type.word_set.filter(text__startswith=word_player[-1]).exists():
+                # 응 처음엔 한방 쓰지마
                 return JsonResponse(
                     {
                         'success': False,
@@ -189,7 +188,7 @@ def word_game(req):
                 }
             )
 
-        if not player_type.word_set.filter(text=word_player).exists():
+        if not player_type.word_set.filter(text=word_player).exists():  # Todo: 북한말과 한국말 구분이 필요함
             # 근데 그런 단어는 없는데수웅?
             return JsonResponse(
                 {
@@ -208,7 +207,7 @@ def word_game(req):
             enemy_can = enemy_ob.filter(text__startswith=du_next[0]) | enemy_ob.filter(
                 text__startswith=du_next[1]) | enemy_ob.filter(text__startswith=du_next[2])
         else:
-            enemy_can = enemy_ob.filter(text__startswith=word_player[len(word_player) - 1])
+            enemy_can = enemy_ob.filter(text__startswith=word_player[-1])
 
         if not enemy_can.exists():
             return JsonResponse(
@@ -231,7 +230,7 @@ def word_game(req):
             player_can = player_type.word_set.all()
             player_can = player_can.exclude(text=word_enemy.text)
 
-            player_can = player_can.filter(text__startswith=word_enemy.text[len(word_enemy.text) - 1])
+            player_can = player_can.filter(text__startswith=word_enemy.text[-1])
             for i in before_log:
                 player_can = player_can.exclude(text=i)
             room.save()
@@ -262,13 +261,13 @@ def word_game(req):
                 word_enemy = random.choice(enemy_can)
 
                 du_tmp = list()
-                duu(word_enemy.text[len(word_enemy.text) - 1], du_tmp)
+                duu(word_enemy.text[-1], du_tmp)
                 player_can = player_ob.exclude(text=word_enemy.text)
                 if len(du_tmp) != 0:
                     player_can = player_can.filter(text__startswith=du_tmp[0]) | player_can.filter(
                         text__startswith=du_tmp[1]) | player_can.filter(text__startswith=du_tmp[2])
                 else:
-                    player_can = player_can.filter(text__startswith=word_enemy.text[len(word_enemy.text) - 1])
+                    player_can = player_can.filter(text__startswith=word_enemy.text[-1])
 
                 for i in before_log:
                     player_can = player_can.exclude(text=i)
@@ -312,10 +311,10 @@ def word_game(req):
                 player_ob = player_ob.exclude(text=i)
 
             for word in enemy_can:
-                end = word.text[len(word.text) - 1]
+                end = word.text[-1]
 
                 du_tmp = list()
-                duu(word.text[len(word.text) - 1], du_tmp)
+                duu(word.text[-1], du_tmp)
                 player_can = player_ob.exclude(text=word.text)
 
                 if len(du_tmp) != 0:
