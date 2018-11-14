@@ -15,6 +15,17 @@ class WordType(models.Model):
         return self.name
 
 
+class GameRoom(models.Model):
+    token = models.TextField()
+    player = models.IntegerField()
+    enemy = models.IntegerField()
+    level = models.IntegerField()
+
+    start = models.IntegerField()
+
+    log = models.TextField(default='')
+
+
 class Word(models.Model):
     type = models.ForeignKey(WordType, on_delete=models.CASCADE)
     text = models.TextField()

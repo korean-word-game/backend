@@ -3,5 +3,7 @@ from django.urls import path,re_path
 from . import views
 
 urlpatterns = [
-    path('add_db/', views.word_plus)
+    path('db/', views.word_plus),
+    path('makeroom/', views.make_room),
+    path('playgame/', views.word_game)
 ]

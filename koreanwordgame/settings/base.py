@@ -13,6 +13,8 @@ config_secret_common = json.loads(open(CONFIG_SECRET_COMMON_FILE).read())
 
 SECRET_KEY = config_secret_common['django']['secret_key']
 
+APPEND_SLASH = False
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -35,7 +37,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -54,7 +55,6 @@ TEMPLATES = [
 ]
 
 SITE_ID = 1
-
 
 DATABASES = {
     'default': {
