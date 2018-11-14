@@ -7,7 +7,6 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from .models import WordFile, Word, WordType, GameRoom
 from django.views.decorators.csrf import csrf_exempt
-import openpyxl
 import time
 import hashlib
 
@@ -56,6 +55,7 @@ def make_room(req):
             req_data = json.loads(req.body.decode("utf-8"))
             player = req_data['player']
             print('app/json')
+            print(req_data)
         enemy = req_data['enemy']
         level = req_data['level']
 
@@ -64,7 +64,7 @@ def make_room(req):
         token = get_token(uid.urn.__str__())
         req.session['token'] = token
 
-        if req_data['start'] == '0':
+        if str(req_data['start']) == '0':
             room = GameRoom(token=token, player=player, enemy=enemy, level=int(level),
                             start=0)
             room.save()
@@ -80,7 +80,7 @@ def make_room(req):
                     'word': word_enemy.text
                 }
             )
-        elif req_data['start'] == '1':
+        elif str(req_data['start']) == '1':
             room = GameRoom(token=token, player=player, enemy=enemy, level=int(level),
                             start=1)
             room.save()
@@ -104,6 +104,7 @@ def word_game(req):
                 req_data = json.loads(req.body.decode("utf-8"))
                 token = req_data['token']
                 print('app/json')
+                print(req_data)
             except:
                 token = req.session['token']
 
@@ -114,7 +115,7 @@ def word_game(req):
         enemy_type = WordType.objects.get(id=room.enemy)
 
         if len(word_player) <= 1:
-            # 이미 나왔는데수웅
+            # 한글자 이하
             return JsonResponse(
                 {
                     'success': False,
@@ -210,7 +211,7 @@ def word_game(req):
             player_can = player_type.word_set.all()
 
             for word in enemy_can:
-                end = word.text[len(word.text)-1]
+                end = word.text[len(word.text) - 1]
                 player_can = player_can.exclude(text=word.text)
                 for i in range(len(before_log)):
                     player_can = player_can.exclude(text=word.text[len(word.text) - 1])
@@ -221,6 +222,7 @@ def word_game(req):
                 if len(player_can) < min_req:
                     min_req = len(player_can)
                     min_list = list()
+                    min_list.append(word)
 
             word_enemy = random.choice(min_list)
 
@@ -265,7 +267,6 @@ def word_search(req):
     if req.method == 'POST':
         try:
             req_data = req.POST
-            token = req_data['token']
             print('multipart')
         except:
             try:
