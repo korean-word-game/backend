@@ -2,6 +2,7 @@ import json
 import uuid
 import random
 import numpy as np
+import hgtk
 
 from django.shortcuts import render
 from django.http import JsonResponse
@@ -122,15 +123,25 @@ def word_game(req):
                     'code': 1
                 }
             )
-        if len(room.log) != 0 and word_player[0] != before_log[len(before_log) - 1][
-            len(before_log[len(before_log) - 1]) - 1]:
-            # 왜 끝말을 안쓰시죠?
-            return JsonResponse(
-                {
-                    'success': False,
-                    'code': 2
-                }
-            )
+        decompose = hgtk.letter.decompose(word_player[0])
+        du = list()
+        if decompose[0] in ['ㄹ', 'ㄴ', 'ㅇ']:
+            du.append(hgtk.letter.compose('ㄹ', decompose[1], decompose[2]))
+            du.append(hgtk.letter.compose('ㄴ', decompose[1], decompose[2]))
+            du.append(hgtk.letter.compose('ㅇ', decompose[1], decompose[2]))
+        print(room.log)
+        print(len(room.log))
+        if len(room.log) != 0:
+            end_word = before_log[len(before_log) - 1][len(before_log[len(before_log) - 1]) - 1]
+
+            if (not (end_word in du)) and end_word != word_player[0]:
+                # 왜 끝말을 안쓰시죠?
+                return JsonResponse(
+                    {
+                        'success': False,
+                        'code': 2
+                    }
+                )
 
         if word_player in before_log:
             # 이미 나왔는데수웅
@@ -155,7 +166,12 @@ def word_game(req):
         for i in range(len(before_log)):
             enemy_can = enemy_can.exclude(text=before_log[i])
 
-        enemy_can = enemy_can.filter(text__startswith=word_player[len(word_player) - 1])
+        if len(du) != 0:
+            enemy_can = enemy_can.filter(text__startswith=du[0])
+            enemy_can.union(enemy_can.filter(text__startswith=du[1]))
+            enemy_can.union(enemy_can.filter(text__startswith=du[2]))
+        else:
+            enemy_can = enemy_can.filter(text__startswith=word_player[len(word_player) - 1])
 
         if not enemy_can.exists():
             return JsonResponse(
@@ -177,10 +193,11 @@ def word_game(req):
 
             player_can = player_type.word_set.all()
             player_can = player_can.exclude(text=word_enemy.text)
-            for i in range(len(before_log)):
-                player_can = player_can.exclude(text=word_enemy.text[len(word_enemy.text) - 1])
 
             player_can = player_can.filter(text__startswith=word_player[len(word_player) - 1])
+            for i in range(len(before_log)):
+                player_can = player_can.filter(text__startswith=word_player[len(word_player) - 1])
+                player_can = player_can.exclude(text=word_enemy.text[len(word_enemy.text) - 1])
 
             room.save()
 
