@@ -5,6 +5,8 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path('db/', views.word_plus),
-    path('makeroom/', views.make_room),
-    path('playgame/', views.word_game)
+    path('', views.index, name='index'),
+    path('game', views.game1, name='game'),
+    path('api/makeroom/', views.make_room),
+    path('api/playgame/', views.word_game)
 ]

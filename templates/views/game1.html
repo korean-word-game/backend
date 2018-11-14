@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    
+    <!-- Compiled and minified -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <!-- Local -->
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'public/stylesheets/main.css' %}">
+    <script src="{% static 'public/scripts/main.js' %}"></script>
+    <script src="{% static 'public/scripts/main2.js' %}"></script>
+
+    <!-- <link href="/public/stylesheets/main.css"> -->
+    <!-- <script src="/public/scripts/main.js"></script> -->
+
+</head>
+<body id="game-bg">
+    <div id="speech-bubble">
+    </div>
+    
+    <div id="record-box">
+        <div id="record-box-in" class="left"></div>
+        <div id="record-box-temp" class="right">
+
+        </div>
+    </div>
+
+    <div id="game-main-cover">
+        <!-- <div class="game-main-skin skin-top"></div> -->
+        <form id="game-main" target="hiddenFrame">
+            <input id="send-word" type="text" autocomplete="off" autofocus>
+            <input class="display-none" type="submit" onclick="send()">
+        </form>
+        <div class="game-main-skin skin-bottom"></div>
+    </div>
+    <iframe name="hiddenFrame" width="0" height="0" style="display: none;"></iframe>
+
+
+
+    <div id="meaning-box">
+        <h5>북한 말 뜻풀이</h5>
+        <h6 class="width-full"><b></b></h6>
+        <div></div>
+    </div>
+</body>

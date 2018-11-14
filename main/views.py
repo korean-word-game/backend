@@ -11,6 +11,15 @@ from django.views.decorators.csrf import csrf_exempt
 import time
 import hashlib
 
+import re
+
+
+def isHangul(text):
+    encText = text
+
+    hanCount = len(re.findall(u'^[가-힣]+$', encText))
+    return hanCount > 0
+
 
 def get_sha512(p0):
     return hashlib.sha3_512(p0.encode('utf-8')).hexdigest()
@@ -33,6 +42,13 @@ def duu(p0, p1):
             p1.append(hgtk.letter.compose('ㄴ', p0[1], p0[2]))
             p1.append(hgtk.letter.compose('ㅇ', p0[1], p0[2]))
 
+def index(req):
+    if req.method == 'GET':
+        return render(req, 'views/index.html', {})
+
+def game1(req):
+    if req.method == 'GET':
+        return render(req, 'views/game1.html', {})
 
 @csrf_exempt
 def word_plus(req):
@@ -81,7 +97,8 @@ def make_room(req):
                             start=0)
             room.save()
             enemy_type = WordType.objects.get(id=room.enemy)
-            enemy_can = enemy_type.word_set.all()
+            enemy_ob = enemy_type.word_set
+            enemy_can = enemy_ob.all()
             word_enemy = np.random.choice(enemy_can)
             room.log = word_enemy.text
             room.save()
@@ -118,10 +135,22 @@ def word_game(req):
                 token = req.session['token']
 
         word_player = req_data['word']
+        print(isHangul(word_player))
+        if not isHangul(word_player):
+            # 한글자 이하
+            return JsonResponse(
+                {
+                    'success': False,
+                    'code': 0
+                }
+            )
+
         room = GameRoom.objects.get(token=token)
         before_log = room.log.split(',')
         player_type = WordType.objects.get(id=room.player)
         enemy_type = WordType.objects.get(id=room.enemy)
+
+
 
         if len(word_player) <= 1:
             # 한글자 이하
@@ -174,9 +203,10 @@ def word_game(req):
             )
 
         # 이제 플레이어를 이겨봅시다
-        enemy_ob = enemy_type.word_set.all()
+        enemy_ob = enemy_type.word_set
+        enemy_can = enemy_ob.all()
         for i in range(len(before_log)):
-            enemy_ob = enemy_ob.exclude(text=before_log[i])
+            enemy_can = enemy_can.exclude(text=before_log[i])
 
         if len(du_next) != 0:
             enemy_can = enemy_ob.filter(text__startswith=du_next[0]) | enemy_ob.filter(
@@ -229,10 +259,58 @@ def word_game(req):
                     'info': word_enemy.info
                 }
             )
-
         elif room.level == 1:
+            # 반박할게 100개 미만이야 나감
+            player_ob = player_type.word_set.all()
+            for _ in range(10):
+                word_enemy = random.choice(enemy_can)
+
+                du_tmp = list()
+                duu(word_enemy.text[len(word_enemy.text) - 1], du_tmp)
+                player_can = player_ob.exclude(text=word_enemy.text)
+                if len(du_tmp) != 0:
+                    player_can = player_can.filter(text__startswith=du_tmp[0]) | player_can.filter(
+                        text__startswith=du_tmp[1]) | player_can.filter(text__startswith=du_tmp[2])
+                else:
+                    player_can = player_can.filter(text__startswith=word_enemy.text[len(word_enemy.text) - 1])
+
+                for i in before_log:
+                    player_can = player_can.exclude(text=i)
+                if len(player_can) <= 400:
+                    break
+            else:
+                word_enemy = random.choice(enemy_can)
+
+
+            before_log.append(word_player)
+            before_log.append(word_enemy.text)
+
+            room.log = ','.join(before_log)
+            room.save()
+            print(player_can)
+
+            if not player_can.exists():
+                return JsonResponse(
+                    {
+                        'success': True,
+                        'finish': True,
+                        'word': word_enemy.text,
+                        'info': word_enemy.info,
+                        'win': 'cpu'
+                    }
+                )
+
+            return JsonResponse(
+                {
+                    'success': True,
+                    'finish': False,
+                    'word': word_enemy.text,
+                    'info': word_enemy.info
+                }
+            )
+        elif room.level == 2:
             # 널 전적으로 마크해주지
-            min_req: int = 99
+            min_req: int = 12312312312
             min_list = list()
             player_ob = player_type.word_set.all()
             for i in before_log:
@@ -241,15 +319,15 @@ def word_game(req):
             for word in enemy_can:
                 end = word.text[len(word.text) - 1]
 
-                duu_tmp = list()
-                duu(word, duu_tmp)
+                du_tmp = list()
+                duu(word.text[len(word.text)-1], du_tmp)
                 player_can = player_ob.exclude(text=word.text)
-                if len(du_next) != 0:
-                    player_can = player_can.filter(text__startswith=du_next[0]) | player_can.filter(
-                        text__startswith=du_next[1]) | player_can.filter(text__startswith=du_next[2])
+
+                if len(du_tmp) != 0:
+                    player_can = player_can.filter(text__startswith=du_tmp[0]) | player_can.filter(
+                        text__startswith=du_tmp[1]) | player_can.filter(text__startswith=du_tmp[2])
                 else:
                     player_can = player_can.filter(text__startswith=end)
-
                 if len(player_can) == min_req:
                     min_list.append(word)
                 if len(player_can) < min_req:
