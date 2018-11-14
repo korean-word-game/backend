@@ -6,9 +6,8 @@ DEBUG = True
 ALLOWED_HOSTS = config_secret_debug['django']['allowed_hosts']
 os.path.join(CONFIG_SECRET_DIR, 'settings_debug.json')
 
-DATABASES =
+DATABASES = config_secret_common['django']['database'][0]
 
-# WSGI application
 WSGI_APPLICATION = 'koreanwordgame.wsgi.debug.application'
 
 ROOT_URLCONF = 'koreanwordgame.urls.debug'
