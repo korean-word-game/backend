@@ -14,11 +14,10 @@ import hashlib
 import re
 
 
-def isHangul(text):
-    encText = text
-
-    hanCount = len(re.findall(u'^[가-힣]+$', encText))
-    return hanCount > 0
+def is_hangul(text):
+    if re.search('[^가-힣]', text):  # 한글이 아닌 글자가 있으면
+        return False
+    return True
 
 
 def get_sha512(p0):
@@ -42,13 +41,16 @@ def duu(p0, p1):
             p1.append(hgtk.letter.compose('ㄴ', p0[1], p0[2]))
             p1.append(hgtk.letter.compose('ㅇ', p0[1], p0[2]))
 
+
 def index(req):
     if req.method == 'GET':
         return render(req, 'views/index.html', {})
 
+
 def game1(req):
     if req.method == 'GET':
         return render(req, 'views/game1.html', {})
+
 
 @csrf_exempt
 def word_plus(req):
@@ -124,15 +126,15 @@ def make_room(req):
 def word_game(req):
     if req.method == 'POST':
         try:
-            req_data = req.POST
-            word_player = req_data['word']
+            _request_data = req.POST
+            word_player = _request_data['word']
         except:
-            req_data = json.loads(req.body.decode("utf-8"))
-            word_player = req_data['word']
+            _request_data = json.loads(req.body.decode("utf-8"))
+            word_player = _request_data['word']
 
         token = req.session['token']
-        print(isHangul(word_player))
-        if not isHangul(word_player):
+        print(is_hangul(word_player))
+        if not is_hangul(word_player):
             # 한글자 이하
             return JsonResponse(
                 {
@@ -145,8 +147,6 @@ def word_game(req):
         before_log = room.log.split(',')
         player_type = WordType.objects.get(id=room.player)
         enemy_type = WordType.objects.get(id=room.enemy)
-
-
 
         if len(word_player) <= 1:
             # 한글자 이하
@@ -277,7 +277,6 @@ def word_game(req):
             else:
                 word_enemy = random.choice(enemy_can)
 
-
             before_log.append(word_player)
             before_log.append(word_enemy.text)
 
@@ -316,7 +315,7 @@ def word_game(req):
                 end = word.text[len(word.text) - 1]
 
                 du_tmp = list()
-                duu(word.text[len(word.text)-1], du_tmp)
+                duu(word.text[len(word.text) - 1], du_tmp)
                 player_can = player_ob.exclude(text=word.text)
 
                 if len(du_tmp) != 0:
