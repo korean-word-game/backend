@@ -7,12 +7,9 @@
 ## 사용법
 
 
-1. git clone "https://github.com/korean-word-game/backend.git"
-
-2. cd backend
-
-3. mkdir .config_secret
-
+1. git clone "https://github.com/korean-word-game/backend.git"<br><br>
+2. cd backend<br><br>
+3. mkdir .config_secret<br><br>
 4. 아래와 같이 프로젝트 루트에 파일 생성<br><br>
  .config_secret<br>
 ┣━━━ settings_common.json<br>
@@ -41,5 +38,6 @@ settings_deploy.json<br><br><code>{
   }
 }
 </code>
-</pre>
-5. 마이그레이션 등등 설정...
+</pre>5. 마이그레이션 등등 설정...<br><br>
+6. 디버깅용 옵션 --settings=koreanwordgame.settings.debug <br>
+실서비스용 옵션 --settings=koreanwordgame.settings.deploy
