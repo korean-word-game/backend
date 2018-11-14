@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import json
 import uuid
 import random
@@ -188,7 +190,7 @@ def word_game(request):
                 }
             )
 
-        if not player_type.word_set.filter(text=word_player).exists():  # Todo: 북한말과 한국말 구분이 필요함
+        if not player_type.word_set.filter(text=word_player).exists():
             # 근데 그런 단어는 없는데수웅?
             return JsonResponse(
                 {
@@ -196,6 +198,8 @@ def word_game(request):
                     'code': 4
                 }
             )
+
+        # Todo: 첫음절 필드 만들기
 
         # 이제 플레이어를 이겨봅시다
         enemy_ob = enemy_type.word_set
