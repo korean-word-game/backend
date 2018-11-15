@@ -158,6 +158,16 @@ def word_game(request):
         player_type = WordType.objects.get(id=room.player)
         enemy_type = WordType.objects.get(id=room.enemy)
 
+
+
+        if len(word_player) <= 1:
+            # 한글자 이하
+            return JsonResponse(
+                {
+                    'success': False,
+                    'code': 1
+                }
+            )
         du = list()
         duu(word_player, du)
 
@@ -220,7 +230,8 @@ def word_game(request):
                 {
                     'success': True,
                     'finish': True,
-                    'win': 'player'
+                    'win': 'player',
+                    'log': ' -> '.join(room.log.split(','))
                 }
             )
 
@@ -248,7 +259,8 @@ def word_game(request):
                         'finish': True,
                         'word': word_enemy.text,
                         'info': word_enemy.info,
-                        'win': 'cpu'
+                        'win': 'cpu',
+                        'log': ' -> '.join(room.log.split(','))
                     }
                 )
 
@@ -257,7 +269,8 @@ def word_game(request):
                     'success': True,
                     'finish': False,
                     'word': word_enemy.text,
-                    'info': word_enemy.info
+                    'info': word_enemy.info,
+                    'log': ' -> '.join(room.log.split(','))
                 }
             )
         elif room.level == 1:
@@ -267,16 +280,13 @@ def word_game(request):
                 word_enemy = random.choice(enemy_can)
 
                 du_tmp = list()
-                duu(word_enemy.text[-1], du_tmp)
+                duu(word_enemy.text[len(word_enemy.text) - 1], du_tmp)
                 player_can = player_ob.exclude(text=word_enemy.text)
                 if len(du_tmp) != 0:
-                    player_can = player_can.filter(
-                        Q(first_char=du_tmp[0]) |
-                        Q(first_char=du_tmp[1]) |
-                        Q(first_char=du_tmp[2])
-                    )
+                    player_can = player_can.filter(text__startswith=du_tmp[0]) | player_can.filter(
+                        text__startswith=du_tmp[1]) | player_can.filter(text__startswith=du_tmp[2])
                 else:
-                    player_can = player_can.filter(first_char=word_enemy.text[-1])
+                    player_can = player_can.filter(text__startswith=word_enemy.text[len(word_enemy.text) - 1])
 
                 for i in before_log:
                     player_can = player_can.exclude(text=i)
@@ -284,6 +294,7 @@ def word_game(request):
                     break
             else:
                 word_enemy = random.choice(enemy_can)
+
 
             before_log.append(word_player)
             before_log.append(word_enemy.text)
@@ -299,7 +310,8 @@ def word_game(request):
                         'finish': True,
                         'word': word_enemy.text,
                         'info': word_enemy.info,
-                        'win': 'cpu'
+                        'win': 'cpu',
+                        'log': ' -> '.join(room.log.split(','))
                     }
                 )
 
@@ -308,7 +320,8 @@ def word_game(request):
                     'success': True,
                     'finish': False,
                     'word': word_enemy.text,
-                    'info': word_enemy.info
+                    'info': word_enemy.info,
+                    'log': ' -> '.join(room.log.split(','))
                 }
             )
         elif room.level == 2:
@@ -320,20 +333,17 @@ def word_game(request):
                 player_ob = player_ob.exclude(text=i)
 
             for word in enemy_can:
-                end = word.text[-1]
+                end = word.text[len(word.text) - 1]
 
                 du_tmp = list()
-                duu(word.text[-1], du_tmp)
+                duu(word.text[len(word.text)-1], du_tmp)
                 player_can = player_ob.exclude(text=word.text)
 
                 if len(du_tmp) != 0:
-                    player_can = player_can.filter(
-                        Q(first_char=du_tmp[0]) |
-                        Q(first_char=du_tmp[1]) |
-                        Q(first_char=du_tmp[2])
-                    )
+                    player_can = player_can.filter(text__startswith=du_tmp[0]) | player_can.filter(
+                        text__startswith=du_tmp[1]) | player_can.filter(text__startswith=du_tmp[2])
                 else:
-                    player_can = player_can.filter(first_char=end)
+                    player_can = player_can.filter(text__startswith=end)
                 if len(player_can) == min_req:
                     min_list.append(word)
                 if len(player_can) < min_req:
@@ -347,7 +357,8 @@ def word_game(request):
                             'finish': True,
                             'word': word.text,
                             'info': word.info,
-                            'win': 'cpu'
+                            'win': 'cpu',
+                            'log': (' -> ').join(room.log.split(','))
                         }
                     )
 
@@ -364,6 +375,20 @@ def word_game(request):
                     'success': True,
                     'finish': False,
                     'word': word_enemy.text,
-                    'info': word_enemy.info
+                    'info': word_enemy.info,
+                    'log': ' -> '.join(room.log.split(','))
                 }
             )
+
+@csrf_exempt
+def gamelog(req):
+    if req.method == 'GET':
+        token = req.session['token']
+        room = GameRoom.objects.get(token=token)
+        print(' ->  '.join(room.log.split(',')))
+
+        return JsonResponse(
+            {
+                'log': ' ->  '.join(room.log.split(','))
+            }
+        )

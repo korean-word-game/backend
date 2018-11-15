@@ -9,5 +9,6 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('game', views.game1, name='game'),
     path('api/makeroom/', views.make_room),
-    path('api/playgame/', views.word_game)
+    path('api/playgame/', views.word_game),
+    path('api/gamelog/', views.gamelog)
 ]
