@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from django.db import models
 
 
@@ -31,6 +33,7 @@ class Word(models.Model):
     text = models.TextField()
     info = models.TextField(blank=True)
     rank = models.IntegerField()
+    first_char = models.TextField()
 
     def __str__(self):
         return self.text

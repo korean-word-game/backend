@@ -1,9 +1,12 @@
+# coding=utf-8
+
 import json
 import uuid
 import random
 import numpy as np
 import hgtk
 
+from django.db.models import Q
 from django.shortcuts import render
 from django.http import JsonResponse
 from .models import WordFile, Word, WordType, GameRoom
@@ -14,11 +17,10 @@ import hashlib
 import re
 
 
-def isHangul(text):
-    encText = text
-
-    hanCount = len(re.findall(u'^[가-힣]+$', encText))
-    return hanCount > 0
+def is_hangul(text):
+    if re.search('[^가-힣]', text):  # 한글이 아닌 글자가 있으면
+        return False
+    return True
 
 
 def get_sha512(p0):
@@ -42,13 +44,16 @@ def duu(p0, p1):
             p1.append(hgtk.letter.compose('ㄴ', p0[1], p0[2]))
             p1.append(hgtk.letter.compose('ㅇ', p0[1], p0[2]))
 
+
 def index(req):
     if req.method == 'GET':
         return render(req, 'views/index.html', {})
 
+
 def game1(req):
     if req.method == 'GET':
         return render(req, 'views/game1.html', {})
+
 
 @csrf_exempt
 def word_plus(req):
@@ -104,6 +109,7 @@ def make_room(req):
             return JsonResponse(
                 {
                     'success': True,
+                    'token': token,
                     'word': word_enemy.text
                 }
             )
@@ -114,34 +120,45 @@ def make_room(req):
             return JsonResponse(
                 {
                     'success': True,
+                    'token': token
                 }
             )
 
 
 @csrf_exempt
-def word_game(req):
-    if req.method == 'POST':
+def word_game(request):
+    if request.method == 'POST':
         try:
-            req_data = req.POST
-            word_player = req_data['word']
+            _request_data = request.POST
+            word_player = _request_data['word']
         except:
-            req_data = json.loads(req.body.decode("utf-8"))
-            word_player = req_data['word']
+            _request_data = json.loads(request.body.decode("utf-8"))
+            word_player = _request_data['word']
+        # word_player: 입력 받은 단어
 
-        token = req.session['token']
-        if not isHangul(word_player):
-            # 한글자 이하
+        # 입력 받은 단어가 올바른 단어인지 검사
+        if not is_hangul(word_player):  # 한글이 아니면
             return JsonResponse(
                 {
                     'success': False,
                     'code': 0
                 }
             )
+        if len(word_player) <= 1:  # 한글자 이하
+            return JsonResponse(
+                {
+                    'success': False,
+                    'code': 1
+                }
+            )
 
+        token = request.session['token']
         room = GameRoom.objects.get(token=token)
         before_log = room.log.split(',')
         player_type = WordType.objects.get(id=room.player)
         enemy_type = WordType.objects.get(id=room.enemy)
+
+
 
         if len(word_player) <= 1:
             # 한글자 이하
@@ -155,20 +172,20 @@ def word_game(req):
         duu(word_player, du)
 
         du_next = list()
-        duu(word_player[len(word_player) - 1], du_next)
-        if len(room.log) != 0:
-            end_word = before_log[len(before_log) - 1][len(before_log[len(before_log) - 1]) - 1]
-            if (not (end_word in du)) and end_word != word_player[0]:
+        duu(word_player[-1], du_next)
+        if not len(room.log) == 0:  # 게임 처음 시작이 아니라면
+            end_word = before_log[-1][-1]  # 최근 단어의 가장 마지막 음절
+            if (end_word not in du) and end_word != word_player[0]:
                 # 왜 끝말을 안쓰시죠?
                 return JsonResponse(
                     {
                         'success': False,
-                        'code': 2
+                        'code': 2  # 제대로 끝말을 이으세요!
                     }
                 )
-        else:
-            if not enemy_type.word_set.filter(text__startswith=word_player[len(word_player) - 1]).exists():
-                # 응 처음엔 한방 쓰지
+        else:  # 게임의 처음 시작이라면
+            if not enemy_type.word_set.filter(first_char=word_player[-1]).exists():
+                # 응 처음엔 한방 쓰지마
                 return JsonResponse(
                     {
                         'success': False,
@@ -200,10 +217,13 @@ def word_game(req):
             enemy_can = enemy_can.exclude(text=before_log[i])
 
         if len(du_next) != 0:
-            enemy_can = enemy_ob.filter(text__startswith=du_next[0]) | enemy_ob.filter(
-                text__startswith=du_next[1]) | enemy_ob.filter(text__startswith=du_next[2])
+            enemy_can = enemy_ob.filter(
+                Q(first_char=du_next[0]) |
+                Q(first_char=du_next[1]) |
+                Q(first_char=du_next[2])
+            )
         else:
-            enemy_can = enemy_ob.filter(text__startswith=word_player[len(word_player) - 1])
+            enemy_can = enemy_ob.filter(first_char=word_player[-1])
 
         if not enemy_can.exists():
             return JsonResponse(
@@ -227,7 +247,7 @@ def word_game(req):
             player_can = player_type.word_set.all()
             player_can = player_can.exclude(text=word_enemy.text)
 
-            player_can = player_can.filter(text__startswith=word_enemy.text[len(word_enemy.text) - 1])
+            player_can = player_can.filter(first_char=word_enemy.text[-1])
             for i in before_log:
                 player_can = player_can.exclude(text=i)
             room.save()
@@ -281,6 +301,7 @@ def word_game(req):
 
             room.log = ','.join(before_log)
             room.save()
+            print(player_can)
 
             if not player_can.exists():
                 return JsonResponse(
