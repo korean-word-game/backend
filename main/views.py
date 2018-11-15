@@ -6,6 +6,7 @@ import random
 import numpy as np
 import hgtk
 
+from django.db.models import Q
 from django.shortcuts import render
 from django.http import JsonResponse
 from .models import WordFile, Word, WordType, GameRoom
@@ -161,7 +162,7 @@ def word_game(request):
         duu(word_player, du)
 
         du_next = list()
-        duu(word_player[len(word_player) - 1], du_next)
+        duu(word_player[-1], du_next)
         if not len(room.log) == 0:  # 게임 처음 시작이 아니라면
             end_word = before_log[-1][-1]  # 최근 단어의 가장 마지막 음절
             if (end_word not in du) and end_word != word_player[0]:
@@ -173,7 +174,7 @@ def word_game(request):
                     }
                 )
         else:  # 게임의 처음 시작이라면
-            if not enemy_type.word_set.filter(text__startswith=word_player[-1]).exists():
+            if not enemy_type.word_set.filter(first_char=word_player[-1]).exists():
                 # 응 처음엔 한방 쓰지마
                 return JsonResponse(
                     {
@@ -199,8 +200,6 @@ def word_game(request):
                 }
             )
 
-        # Todo: 첫음절 필드 만들기
-
         # 이제 플레이어를 이겨봅시다
         enemy_ob = enemy_type.word_set
         enemy_can = enemy_ob.all()
@@ -208,10 +207,13 @@ def word_game(request):
             enemy_can = enemy_can.exclude(text=before_log[i])
 
         if len(du_next) != 0:
-            enemy_can = enemy_ob.filter(text__startswith=du_next[0]) | enemy_ob.filter(
-                text__startswith=du_next[1]) | enemy_ob.filter(text__startswith=du_next[2])
+            enemy_can = enemy_ob.filter(
+                Q(first_char=du_next[0]) |
+                Q(first_char=du_next[1]) |
+                Q(first_char=du_next[2])
+            )
         else:
-            enemy_can = enemy_ob.filter(text__startswith=word_player[-1])
+            enemy_can = enemy_ob.filter(first_char=word_player[-1])
 
         if not enemy_can.exists():
             return JsonResponse(
@@ -234,7 +236,7 @@ def word_game(request):
             player_can = player_type.word_set.all()
             player_can = player_can.exclude(text=word_enemy.text)
 
-            player_can = player_can.filter(text__startswith=word_enemy.text[-1])
+            player_can = player_can.filter(first_char=word_enemy.text[-1])
             for i in before_log:
                 player_can = player_can.exclude(text=i)
             room.save()
@@ -268,10 +270,13 @@ def word_game(request):
                 duu(word_enemy.text[-1], du_tmp)
                 player_can = player_ob.exclude(text=word_enemy.text)
                 if len(du_tmp) != 0:
-                    player_can = player_can.filter(text__startswith=du_tmp[0]) | player_can.filter(
-                        text__startswith=du_tmp[1]) | player_can.filter(text__startswith=du_tmp[2])
+                    player_can = player_can.filter(
+                        Q(first_char=du_tmp[0]) |
+                        Q(first_char=du_tmp[1]) |
+                        Q(first_char=du_tmp[2])
+                    )
                 else:
-                    player_can = player_can.filter(text__startswith=word_enemy.text[-1])
+                    player_can = player_can.filter(first_char=word_enemy.text[-1])
 
                 for i in before_log:
                     player_can = player_can.exclude(text=i)
@@ -322,10 +327,13 @@ def word_game(request):
                 player_can = player_ob.exclude(text=word.text)
 
                 if len(du_tmp) != 0:
-                    player_can = player_can.filter(text__startswith=du_tmp[0]) | player_can.filter(
-                        text__startswith=du_tmp[1]) | player_can.filter(text__startswith=du_tmp[2])
+                    player_can = player_can.filter(
+                        Q(first_char=du_tmp[0]) |
+                        Q(first_char=du_tmp[1]) |
+                        Q(first_char=du_tmp[2])
+                    )
                 else:
-                    player_can = player_can.filter(text__startswith=end)
+                    player_can = player_can.filter(first_char=end)
                 if len(player_can) == min_req:
                     min_list.append(word)
                 if len(player_can) < min_req:
