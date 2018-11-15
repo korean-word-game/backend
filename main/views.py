@@ -104,7 +104,6 @@ def make_room(req):
             return JsonResponse(
                 {
                     'success': True,
-                    'token': token,
                     'word': word_enemy.text
                 }
             )
@@ -115,7 +114,6 @@ def make_room(req):
             return JsonResponse(
                 {
                     'success': True,
-                    'token': token
                 }
             )
 
@@ -131,7 +129,6 @@ def word_game(req):
             word_player = req_data['word']
 
         token = req.session['token']
-        print(isHangul(word_player))
         if not isHangul(word_player):
             # 한글자 이하
             return JsonResponse(
@@ -145,8 +142,6 @@ def word_game(req):
         before_log = room.log.split(',')
         player_type = WordType.objects.get(id=room.player)
         enemy_type = WordType.objects.get(id=room.enemy)
-
-
 
         if len(word_player) <= 1:
             # 한글자 이하
@@ -215,7 +210,8 @@ def word_game(req):
                 {
                     'success': True,
                     'finish': True,
-                    'win': 'player'
+                    'win': 'player',
+                    'log': ' -> '.join(room.log.split(','))
                 }
             )
 
@@ -243,7 +239,8 @@ def word_game(req):
                         'finish': True,
                         'word': word_enemy.text,
                         'info': word_enemy.info,
-                        'win': 'cpu'
+                        'win': 'cpu',
+                        'log': ' -> '.join(room.log.split(','))
                     }
                 )
 
@@ -252,7 +249,8 @@ def word_game(req):
                     'success': True,
                     'finish': False,
                     'word': word_enemy.text,
-                    'info': word_enemy.info
+                    'info': word_enemy.info,
+                    'log': ' -> '.join(room.log.split(','))
                 }
             )
         elif room.level == 1:
@@ -283,7 +281,6 @@ def word_game(req):
 
             room.log = ','.join(before_log)
             room.save()
-            print(player_can)
 
             if not player_can.exists():
                 return JsonResponse(
@@ -292,7 +289,8 @@ def word_game(req):
                         'finish': True,
                         'word': word_enemy.text,
                         'info': word_enemy.info,
-                        'win': 'cpu'
+                        'win': 'cpu',
+                        'log': ' -> '.join(room.log.split(','))
                     }
                 )
 
@@ -301,7 +299,8 @@ def word_game(req):
                     'success': True,
                     'finish': False,
                     'word': word_enemy.text,
-                    'info': word_enemy.info
+                    'info': word_enemy.info,
+                    'log': ' -> '.join(room.log.split(','))
                 }
             )
         elif room.level == 2:
@@ -337,7 +336,8 @@ def word_game(req):
                             'finish': True,
                             'word': word.text,
                             'info': word.info,
-                            'win': 'cpu'
+                            'win': 'cpu',
+                            'log': (' -> ').join(room.log.split(','))
                         }
                     )
 
@@ -354,6 +354,20 @@ def word_game(req):
                     'success': True,
                     'finish': False,
                     'word': word_enemy.text,
-                    'info': word_enemy.info
+                    'info': word_enemy.info,
+                    'log': ' -> '.join(room.log.split(','))
                 }
             )
+
+@csrf_exempt
+def gamelog(req):
+    if req.method == 'GET':
+        token = req.session['token']
+        room = GameRoom.objects.get(token=token)
+        print(' ->  '.join(room.log.split(',')))
+
+        return JsonResponse(
+            {
+                'log': ' ->  '.join(room.log.split(','))
+            }
+        )
