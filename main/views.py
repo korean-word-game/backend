@@ -283,10 +283,13 @@ def word_game(request):
                 duu(word_enemy.text[len(word_enemy.text) - 1], du_tmp)
                 player_can = player_ob.exclude(text=word_enemy.text)
                 if len(du_tmp) != 0:
-                    player_can = player_can.filter(text__startswith=du_tmp[0]) | player_can.filter(
-                        text__startswith=du_tmp[1]) | player_can.filter(text__startswith=du_tmp[2])
+                    player_can = player_can.filter(
+                        Q(first_char=du_tmp[0]) |
+                        Q(first_char=du_tmp[1]) |
+                        Q(first_char=du_tmp[2])
+                    )
                 else:
-                    player_can = player_can.filter(text__startswith=word_enemy.text[len(word_enemy.text) - 1])
+                    player_can = player_can.filter(first_char=word_enemy.text[len(word_enemy.text) - 1])
 
                 for i in before_log:
                     player_can = player_can.exclude(text=i)
@@ -301,7 +304,6 @@ def word_game(request):
 
             room.log = ','.join(before_log)
             room.save()
-            print(player_can)
 
             if not player_can.exists():
                 return JsonResponse(
@@ -340,10 +342,13 @@ def word_game(request):
                 player_can = player_ob.exclude(text=word.text)
 
                 if len(du_tmp) != 0:
-                    player_can = player_can.filter(text__startswith=du_tmp[0]) | player_can.filter(
-                        text__startswith=du_tmp[1]) | player_can.filter(text__startswith=du_tmp[2])
+                    player_can = player_can.filter(
+                        Q(first_char=du_tmp[0]) |
+                        Q(first_char=du_tmp[1]) |
+                        Q(first_char=du_tmp[2])
+                    )
                 else:
-                    player_can = player_can.filter(text__startswith=end)
+                    player_can = player_can.filter(first_char=end)
                 if len(player_can) == min_req:
                     min_list.append(word)
                 if len(player_can) < min_req:
@@ -358,7 +363,7 @@ def word_game(request):
                             'word': word.text,
                             'info': word.info,
                             'win': 'cpu',
-                            'log': (' -> ').join(room.log.split(','))
+                            'log': ' -> '.join(room.log.split(','))
                         }
                     )
 
