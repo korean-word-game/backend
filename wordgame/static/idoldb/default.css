@@ -1,0 +1,23 @@
+@import url(//fonts.googleapis.com/earlyaccess/nanumgothic.css);
+
+body {
+    font-family: "Nanum Gothic", serif;
+}
+
+nav {
+    margin-bottom: 20px;
+}
+
+.design1 {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.form_design1{
+    width: auto;
+    border: 2px solid greenyellow;
+    padding: 18px;
+    -webkit-border-radius: 7px;
+    -moz-border-radius: 7px;
+    border-radius: 7px;
+}
