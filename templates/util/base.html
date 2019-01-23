@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'idoldb/default.css' %}"/>
+    <link rel="shortcut icon" href="{% static 'idoldb/favicon.ico' %}" type="image/x-icon">
+    <link rel="icon" href="{% static 'idoldb/favicon.ico' %}" type="image/x-icon">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css"
+          integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"
+            integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js"
+            integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1"
+            crossorigin="anonymous"></script>
+</head>
+<body class="design1">
+{% if idol %}
+    <nav class="navbar navbar-expand-lg navbar-light text-left" style="background-color: {{ idol.color }};">
+{% else %}
+    <nav class="navbar navbar-expand-lg navbar-light text-left" style="background-color: #e3f2fd;">
+{% endif %}
+
+<a class="navbar-brand" href="{% url 'idolMain' %}">아이돌DB</a>
+<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+</button>
+
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+        {% if now == 'main' %}
+            <li class="nav-item active">
+                <a class="nav-link" href="{% url 'idolMain' %}">메인<span class="sr-only">(current)</span></a>
+            </li>
+        {% else %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'idolMain' %}">메인</a>
+            </li>
+        {% endif %}
+        {% if now == 'all' %}
+            <li class="nav-item active">
+                <a class="nav-link" href="{% url 'idolAll' %}">전체<span class="sr-only">(current)</span></a>
+            </li>
+        {% else %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'idolAll' %}">전체</a>
+            </li>
+        {% endif %}
+        {% if now == 'camelog' %}
+            <li class="nav-item active">
+                <a class="nav-link" href="{% url 'cameLog' %}">방명록<span class="sr-only">(current)</span></a>
+            </li>
+        {% else %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'cameLog' %}">방명록</a>
+            </li>
+        {% endif %}
+        <li class="nav-item dropdown">
+            {% if isLogin %}
+                <a class="nav-link dropdown-toggle" href="" id="navbarDropdownMenuLink" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    {{ user.nickname }}
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <a class="dropdown-item" href="{% url 'logout' %}">로그아웃</a>
+                </div>
+            {% else %}
+                <a class="nav-link dropdown-toggle" href="" id="navbarDropdownMenuLink" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    계정
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <a class="dropdown-item" href="{% url 'login' %}">로그인</a>
+                    <a class="dropdown-item" href="{% url 'signup' %}">회원가입</a>
+                </div>
+            {% endif %}
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="https://github.com/nonamep765/idolDB_Django" target="_blank">API</a>
+        </li>
+    </ul>
+</div>
+</nav>
+
+{% if error %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>log: </strong> {{ error }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+{% endif %}
+</body>
+{% block content %}
+{% endblock %}
+
+</html>
