@@ -20,13 +20,10 @@
             crossorigin="anonymous"></script>
 </head>
 <body class="design1">
-{% if idol %}
-    <nav class="navbar navbar-expand-lg navbar-light text-left" style="background-color: {{ idol.color }};">
-{% else %}
-    <nav class="navbar navbar-expand-lg navbar-light text-left" style="background-color: #e3f2fd;">
-{% endif %}
 
-<a class="navbar-brand" href="{% url 'idolMain' %}">아이돌DB</a>
+<nav class="navbar navbar-expand-lg navbar-light text-left" style="background-color: #fd7ff2;">
+
+<a class="navbar-brand" href="{% url 'idolMain' %}">잇다</a>
 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -34,33 +31,15 @@
 
 <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav mr-auto">
-        {% if now == 'main' %}
-            <li class="nav-item active">
-                <a class="nav-link" href="{% url 'idolMain' %}">메인<span class="sr-only">(current)</span></a>
-            </li>
-        {% else %}
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'idolMain' %}">메인</a>
-            </li>
-        {% endif %}
-        {% if now == 'all' %}
-            <li class="nav-item active">
-                <a class="nav-link" href="{% url 'idolAll' %}">전체<span class="sr-only">(current)</span></a>
-            </li>
-        {% else %}
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'idolAll' %}">전체</a>
-            </li>
-        {% endif %}
-        {% if now == 'camelog' %}
-            <li class="nav-item active">
-                <a class="nav-link" href="{% url 'cameLog' %}">방명록<span class="sr-only">(current)</span></a>
-            </li>
-        {% else %}
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'cameLog' %}">방명록</a>
-            </li>
-        {% endif %}
+{#        {% if now == 'main' %}#}
+{#            <li class="nav-item active">#}
+{#                <a class="nav-link" href="{% url 'wordgameMain' %}">메인<span class="sr-only">(current)</span></a>#}
+{#            </li>#}
+{#        {% else %}#}
+{#            <li class="nav-item">#}
+{#                <a class="nav-link" href="{% url 'wordgameMain' %}">메인</a>#}
+{#            </li>#}
+{#        {% endif %}#}
         <li class="nav-item dropdown">
             {% if isLogin %}
                 <a class="nav-link dropdown-toggle" href="" id="navbarDropdownMenuLink" data-toggle="dropdown"

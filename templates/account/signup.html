@@ -9,22 +9,15 @@
             <div class="col-md-6">
                 <form action="{% url 'signup' %}" accept-charset="utf-8" name="signup" method="post"> {% csrf_token %}
                     <div class="form-group row">
-                        <label for="inputEmail" class="col-md-6 col-form-label">이메일</label>
-                        <div class="col-md-6">
-                            <input type="email" class="form-control" id="exampleFormControlInput1"
-                                   placeholder="name@example.com" required name="email">
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputNickname" class="col-md-6 col-form-label">닉네임</label>
+                        <label for="inputUserName" class="col-md-6 col-form-label">유저 이름</label>
                         <div class="col-md-6">
                             <input type="text" class="form-control" id="exampleFormControlInput1"
-                                   placeholder="홍길동" required name="nickname">
+                                   placeholder="홍길동" required name="username">
                         </div>
                     </div>
                     <div class="form-group row">
 
-                        <label for="inputPassword" class="col-md-6 col-form-label">비밀번호</label>
+                        <label for="inputPassword" class="col-md-6 col-form-label">PIN번호</label>
                         <div class="col-md-6">
                             <input type="password" class="form-control" id="inputPassword"
                                    required name="password1" placeholder="Password">
@@ -32,7 +25,7 @@
                     </div>
                     <div class="form-group row">
 
-                        <label for="inputPassword" class="col-md-6 col-form-label">비밀번호 확인</label>
+                        <label for="inputPassword" class="col-md-6 col-form-label">PIN번호 확인</label>
                         <div class="col-md-6">
                             <input type="password" class="form-control" id="inputPassword"
                                    required name="password2" placeholder="Repeat Password">
