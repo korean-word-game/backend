@@ -13,7 +13,7 @@ from wordgame.models import Room
 class MakeRoomForm(forms.ModelForm):
     class Meta:
         model = Room
-        fields = ('title', 'is_hide', 'mode')
+        fields = ('title', 'is_hide', 'mode', 'how_to_win')
 
     def save(self, commit=False):
         room = super(MakeRoomForm, self).save(commit=False)

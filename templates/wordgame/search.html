@@ -29,12 +29,12 @@
                 chatSocket.onmessage = function (e) {
                     let data = JSON.parse(e.data);
                     if (data['type'] === 'room_info_changed') {
-                        Object.keys(data['result']).forEach((key)=>{
-                            document.querySelector('#room_'+key+'_'+data['room_id']).innerHTML = data['result'][key];
-                            if (key === 'now_people' && data['result']['now_people']==='6'){
+                        Object.keys(data['result']).forEach((key) => {
+                            document.querySelector('#room_' + key + '_' + data['room_id']).innerHTML = data['result'][key];
+                            if (key === 'now_people' && data['result']['now_people'] === '6') {
                                 document.querySelector('#room_full_' + data['room_id']).setAttribute('disabled')
                             }
-                            if (key === 'now_people' && data['result']['now_people']!=='6'){
+                            if (key === 'now_people' && data['result']['now_people'] !== '6') {
                                 document.querySelector('#room_full_' + data['room_id']).removeAttribute('disabled')
                             }
                         })
@@ -42,17 +42,50 @@
                     }
                     if (data['type'] === 'query') {
                         if (data['callback'] === uuid) {
-                            let result = JSON.parse(data['result']);
-                            let result_list = document.querySelector('#search_list')
-                            result.forEach((room, index, array) => {
-                                result_list.innerHTML += '<div id=room_' + room.pk + ' class="card border-warning text-right col-9 col-md-6 m-2">\n' +
-                                    '                <div class="card-body">\n' +
-                                    '                    <h4 id=room_title_' + room.pk + ' class="card-title">' + room.fields.title + '</h4>\n' +
-                                    '                    <p id=room_now_people_' + room.pk + ' class="card-text">인원수 ' + room.fields.now_people + '/6</p>\n' +
-                                    '                    <a id=room_full_' + room.pk + ' href="/chat/' + room.pk + '" class="btn btn-success">입장</a>\n' +
-                                    '                </div>\n' +
-                                    '            </div>'
-                            })
+                            if (mode === 'classic') {
+                                let result = JSON.parse(data['result']);
+                                let result_list = document.querySelector('#search_list')
+                                result.forEach((room, index, array) => {
+                                    result_list.innerHTML += '<div id=room_' + room.pk + ' class="card border-warning text-right col-9 col-md-6 m-2">\n' +
+                                        '                <div class="card-body">\n' +
+                                        '                    <h4 id=room_title_' + room.pk + ' class="card-title">' + room.fields.title + '</h4>\n' +
+                                        '                    <p id=room_now_people_' + room.pk + ' class="card-text">클래식  인원수 ' + room.fields.now_people + '/6</p>\n' +
+                                        '                    <a id=room_full_' + room.pk + ' href="/chat/' + room.pk + '" class="btn btn-success">입장</a>\n' +
+                                        '                </div>\n' +
+                                        '            </div>'
+                                })
+                            }
+                            if (mode === 'mission') {
+                                let result = JSON.parse(data['result']);
+                                let result_list = document.querySelector('#search_list')
+                                let howtowin = '';
+                                switch (room.how_to_win) {
+                                    case 2:
+                                        howtowin = '음절을 모두 모면 이긴다!'
+                                        break;
+                                    case 3:
+                                        howtowin = '글자수 총합이 적으면 이긴다!'
+                                        break;
+                                    case 4:
+                                        howtowin = '금지어를 말하면 진다!'
+                                        break;
+                                    case 5:
+                                        howtowin = 'n번째 글자를 쓰면 이긴다!'
+                                        break;
+                                    case 6:
+                                        howtowin = '글자수 총합이 크면 이긴다!'
+                                        break;
+                                }
+                                result.forEach((room, index, array) => {
+                                    result_list.innerHTML += '<div id=room_' + room.pk + ' class="card border-warning text-right col-9 col-md-6 m-2">\n' +
+                                        '                <div class="card-body">\n' +
+                                        '                    <h4 id=room_title_' + room.pk + ' class="card-title">' + room.fields.title + '</h4>\n' +
+                                        '                    <p id=room_now_people_' + room.pk + ' class="card-text">' + howtowin + '인원수 ' + room.fields.now_people + '/6</p>\n' +
+                                        '                    <a id=room_full_' + room.pk + ' href="/chat/' + room.pk + '" class="btn btn-success">입장</a>\n' +
+                                        '                </div>\n' +
+                                        '            </div>'
+                                })
+                            }
 
                         }
                     }
@@ -97,17 +130,58 @@
                             <div class="row justify-content-center mt-3">
                                 <div class="form-check col-6">
                                     <input class="form-check-input" type="radio" name="mode" id="Radios1"
-                                           value="1" checked>
+                                           value="1" checked
+                                           onclick="document.querySelector('#select_howtowin').innerHTML=''">
                                     <label class="form-check-label" for="1">
                                         클래식 모드
                                     </label>
                                 </div>
                                 <div class="form-check col-6">
                                     <input class="form-check-input" type="radio" name="mode" id="Radios2"
-                                           value="2">
+                                           value="2" onclick='document.querySelector("#select_howtowin").innerHTML = "<h5>미션 선택</h5>\n"+
+"                                    <div style=\"text-align:left;\">\n"+
+"                                    <div class=\"form-check col-12\">\n"+
+"                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
+"                                               value=\"2\">\n"+
+"                                        <label class=\"form-check-label\" for=\"2\">\n"+
+"                                            음절을 모두 모면 이긴다!\n"+
+"                                        </label>\n"+
+"                                    </div>\n"+
+"                                    <div class=\"form-check col-12\">\n"+
+"                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
+"                                               value=\"2\">\n"+
+"                                        <label class=\"form-check-label\" for=\"3\">\n"+
+"                                            글자수 총합이 적으면 이긴다!\n"+
+"                                        </label>\n"+
+"                                    </div>\n"+
+"                                    <div class=\"form-check col-12\">\n"+
+"                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
+"                                               value=\"2\">\n"+
+"                                        <label class=\"form-check-label\" for=\"4\">\n"+
+"                                            금지어를 말하면 진다!\n"+
+"                                        </label>\n"+
+"                                    </div>\n"+
+"                                    <div class=\"form-check col-12\">\n"+
+"                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
+"                                               value=\"2\">\n"+
+"                                        <label class=\"form-check-label\" for=\"5\">\n"+
+"                                            n번째 글자를 쓰면 이긴다!\n"+
+"                                        </label>\n"+
+"                                    </div>\n"+
+"                                    <div class=\"form-check col-12\">\n"+
+"                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
+"                                               value=\"2\">\n"+
+"                                        <label class=\"form-check-label\" for=\"6\">\n"+
+"                                            글자수 총합이 크면 이긴다!\n"+
+"                                        </label>\n"+
+"                                    </div>"+
+"                                    </div>"'>
                                     <label class="form-check-label" for="2">
                                         미션 모드
                                     </label>
+                                </div>
+                                <div id="select_howtowin">
+
                                 </div>
                                 <div class="form-check col-9 mt-2">
                                     <input class="form-check-input" type="checkbox" value=True name="is_hide"
