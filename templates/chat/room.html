@@ -8,7 +8,7 @@
 
                 var chatSocket = new WebSocket(
                     'ws://' + window.location.host +
-                    '/ws/chat/' + {{ room.pk }} + '/');
+                    '/ws/chat/' + {{ room.pk }} +'/');
 
                 chatSocket.onmessage = function (e) {
                     var data = JSON.parse(e.data);
@@ -218,8 +218,64 @@
                         </div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-success col-5 mt-3 mr-3">게임시작!</button>
-                <button type="submit" class="btn btn-success col-11 mt-3 mr-3">게임시작!</button>
+                <button type="submit" class="btn btn-success col-5 mt-3 mr-3 mb-5">게임시작!</button>
+                <button type="button" class="btn btn-info col-5 mt-3 mb-5" data-toggle="modal"
+                        data-target="#addModal">
+                    방 수정하기
+                </button>
+
+                <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel"
+                     aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="addModalLabel">방 수정</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="방이름" name="title"
+                                           aria-label="Username"
+                                           aria-describedby="basic-addon1" required>
+                                </div>
+                                <div class="row justify-content-center mt-3">
+                                    <div class="form-check col-6">
+                                        <input class="form-check-input" type="radio" name="mode" id="Radios1"
+                                               value="1" checked>
+                                        <label class="form-check-label" for="1">
+                                            클래식 모드
+                                        </label>
+                                    </div>
+                                    <div class="form-check col-6">
+                                        <input class="form-check-input" type="radio" name="mode" id="Radios2"
+                                               value="2">
+                                        <label class="form-check-label" for="2">
+                                            미션 모드
+                                        </label>
+                                    </div>
+                                    <div class="form-check col-6">
+                                        <input class="form-check-input" type="radio" name="mode" id="Radios2"
+                                               value="2">
+                                        <label class="form-check-label" for="2">
+                                            미션 모드
+                                        </label>
+                                    </div>
+                                    <div class="form-check col-9 mt-2">
+                                        <input class="form-check-input" type="checkbox" value=True name="is_hide"
+                                               id="is_hide">
+                                        <label class="form-check-label" for="is_hide">
+                                            숨겨진 방
+                                        </label>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </div>
