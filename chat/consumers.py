@@ -2,37 +2,55 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 from django.core import serializers
+from django.db.models import F
 
 from users.models import User
 from wordgame.models import Room
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
+    group_connected = False
+    num_increased = False
+
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
         self.user = None
 
-        token = self.scope['session'].get('token')
-        if token:
-            self.user = User.objects.get(token=token)
+        session = self.scope['session']
+        if session:
+            token = session.get('token')
+            if token:
+                self.user = User.objects.get(token=token)
+                self.group_connected = True
 
-        # await self.get_rooms()
+                try:
+                    # now_people += 1
+                    Room.objects.filter(id=self.room_name).update(now_people=F('now_people') + 1)
+                except:
+                    pass
+                else:
+                    self.num_increased = True
 
-        # Join room group
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
-        )
+                # Join room group
+                await self.channel_layer.group_add(
+                    self.room_group_name,
+                    self.channel_name
+                )
 
-        await self.accept()
+                await self.accept()
 
     async def disconnect(self, close_code):
-        # Leave room group
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        if self.num_increased:
+            # now_people -= 1
+            Room.objects.filter(id=self.room_name).update(now_people=F('now_people') - 1)
+
+        if self.group_connected:
+            # Leave room group
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
 
     # Receive message from WebSocket
     async def receive(self, text_data=None, bytes_data=None):
@@ -116,7 +134,9 @@ class LobbyConsumer(AsyncWebsocketConsumer):
 
         if filter_str == 'mission':
             models = Room.objects.filter(is_hide=False, mode_id=2)
-        else:  # classic or None
+        elif filter_str == 'classic':
+            models = Room.objects.filter(is_hide=False, mode_id=1)
+        else:  # None
             models = Room.objects.filter(is_hide=False)
 
         await self.send_json({
