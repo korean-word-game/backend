@@ -9,6 +9,11 @@
                 var chatSocket = new WebSocket(
                     'ws://' + window.location.host +
                     '/ws/chat/' + roomName + '/');
+                {#chatSocket.onopen = (e) => {#}
+                {#    chatSocket.send(JSON.stringify({#}
+                {#        'token': '{{ user.token }}'#}
+                {#    }));#}
+                {#}#}
 
                 chatSocket.onmessage = function (e) {
                     var data = JSON.parse(e.data);
@@ -31,7 +36,7 @@
                         var message = messageInputDom.value;
                         if (message !== '') {
                             chatSocket.send(JSON.stringify({
-                                'message': '{{ user.username }}'+': '+message
+                                'message': '{{ user.username }}' + ': ' + message
                             }));
 
                             messageInputDom.value = '';

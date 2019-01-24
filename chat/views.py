@@ -26,7 +26,6 @@ class Room(View):
     def get(self, req, room_name):
         check_login(req)
         isLogin, user = auto_login_controller(req)
-        print(user)
 
         rDict = dict(isLogin=isLogin, now='main', user=user)
         rDict['room_name']=mark_safe(json.dumps(room_name))
