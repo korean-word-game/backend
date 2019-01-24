@@ -65,7 +65,7 @@
                             result_list.innerHTML += '<div id=room_' + room.pk + ' class="card border-warning text-right col-9 col-md-6 m-2">\n' +
                                 '                <div class="card-body">\n' +
                                 '                    <h4 id=room_title_' + room.pk + ' class="card-title">' + room.fields.title + '</h4>\n' +
-                                '                    <p id=room_now_people_' + room.pk + ' class="card-text">' + howtowin + '인원수 ' + room.fields.now_people + '/6</p>\n' +
+                                '                    <p id=room_now_people_' + room.pk + ' class="card-text">' + howtowin + '-인원수 ' + room.fields.now_people + '/6</p>\n' +
                                 '                    <a id=room_full_' + room.pk + ' href="/chat/' + room.pk + '" class="btn btn-success">입장</a>\n' +
                                 '                </div>\n' +
                                 '            </div>'
@@ -114,29 +114,29 @@
                             if (mode === 'mission') {
                                 let result = JSON.parse(data['result']);
                                 let result_list = document.querySelector('#search_list')
-                                let howtowin = '';
-                                switch (room.how_to_win) {
-                                    case 2:
-                                        howtowin = '음절을 모두 모면 이긴다!'
-                                        break;
-                                    case 3:
-                                        howtowin = '글자수 총합이 적으면 이긴다!'
-                                        break;
-                                    case 4:
-                                        howtowin = '금지어를 말하면 진다!'
-                                        break;
-                                    case 5:
-                                        howtowin = 'n번째 글자를 쓰면 이긴다!'
-                                        break;
-                                    case 6:
-                                        howtowin = '글자수 총합이 크면 이긴다!'
-                                        break;
-                                }
                                 result.forEach((room, index, array) => {
+                                    let howtowin = '';
+                                    switch (room.fields.how_to_win) {
+                                        case 2:
+                                            howtowin = '음절을 모두 모면 이긴다!'
+                                            break;
+                                        case 3:
+                                            howtowin = '글자수 총합이 적으면 이긴다!'
+                                            break;
+                                        case 4:
+                                            howtowin = '금지어를 말하면 진다!'
+                                            break;
+                                        case 5:
+                                            howtowin = 'n번째 글자를 쓰면 이긴다!'
+                                            break;
+                                        case 6:
+                                            howtowin = '글자수 총합이 크면 이긴다!'
+                                            break;
+                                    }
                                     result_list.innerHTML += '<div id=room_' + room.pk + ' class="card border-warning text-right col-9 col-md-6 m-2">\n' +
                                         '                <div class="card-body">\n' +
                                         '                    <h4 id=room_title_' + room.pk + ' class="card-title">' + room.fields.title + '</h4>\n' +
-                                        '                    <p id=room_now_people_' + room.pk + ' class="card-text">' + howtowin + '인원수 ' + room.fields.now_people + '/6</p>\n' +
+                                        '                    <p id=room_now_people_' + room.pk + ' class="card-text">' + howtowin + '-인원수 ' + room.fields.now_people + '/6</p>\n' +
                                         '                    <a id=room_full_' + room.pk + ' href="/chat/' + room.pk + '" class="btn btn-success">입장</a>\n' +
                                         '                </div>\n' +
                                         '            </div>'
