@@ -111,7 +111,14 @@ class LobbyConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(json_data))
 
     async def event_get_rooms(self, event=None):
-        models = Room.objects.filter(is_hide=False)
+
+        filter_str = event.get('filter')
+
+        if filter_str == 'mission':
+            models = Room.objects.filter(is_hide=False, mode_id=2)
+        else:  # classic or None
+            models = Room.objects.filter(is_hide=False)
+
         await self.send_json({
             'type': 'query',
             'query': 'get_rooms',
