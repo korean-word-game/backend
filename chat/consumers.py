@@ -1,12 +1,25 @@
 # chat/consumers.py
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
+from django.core import serializers
+
+from users.models import User
+from wordgame.models import Room
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
+        self.user = None
+
+        token = self.scope['session'].get('token')
+        if token:
+            self.user = User.objects.get(token=token)
+
+        # await self.get_rooms()
+
+        # Join room group
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
@@ -25,16 +38,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data=None, bytes_data=None):
         if text_data:
             text_data_json = json.loads(text_data)
-            message = text_data_json['message']
+            command_type = text_data_json.get('type')
+
+            if command_type == 'chat_message':
+                message = text_data_json['message']
+                await self.message_received(message)
 
             # Send message to room group
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    'type': 'chat_message',
-                    'message': message
-                }
-            )
+
+    async def message_received(self, message):
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'chat_message',
+                'user': self.user.username,
+                'message': message
+            }
+        )
 
     # Receive message from room group
     async def chat_message(self, event):
@@ -44,3 +64,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'message': message
         }))
+
+    async def get_rooms(self):
+        models = Room.objects.filter(is_hide=False)
+
+        print(serializers.serialize('json', models))
