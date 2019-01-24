@@ -238,16 +238,20 @@ class LobbyConsumer(AsyncWebsocketConsumer):
         })
 
     async def event_room_entered(self, event=None):
-        await self.send_room_info_changed(
-            event['room_id'],
-            {'now_people': Room.objects.get(id=event['room_id']).now_people}
-        )
+        num = Room.objects.get(id=event['room_id']).now_people
+        if not num:  # if num!=0
+            await self.send_room_info_changed(
+                event['room_id'],
+                {'now_people': num}
+            )
 
     async def event_room_exit(self, event=None):
-        await self.send_room_info_changed(
-            event['room_id'],
-            {'now_people': Room.objects.get(id=event['room_id']).now_people}
-        )
+        num = Room.objects.get(id=event['room_id']).now_people
+        if not num:  # if num!=0
+            await self.send_room_info_changed(
+                event['room_id'],
+                {'now_people': num}
+            )
 
     async def event_room_created(self, event=None):
         await self.send_json({
