@@ -9,15 +9,23 @@ from django.db.models import F
 
 from users.models import User
 from wordgame.models import Room
-from config.settings.base import REDIS_URI
+from config.settings.base import REDIS_URI, REDIS_INFO
 
 from aioredlock import Aioredlock, LockError
 import aioredis
+import redis
 
 ROOM_INFO = 'room_info'
 ROOM_PEOPLE_LIMIT = 6
 ROOM_EXCEEDED_LIMIT_MSG = '게임에 참가 할 수 없습니다'
 ROOM_ALREADY_EXIST_MSG = '이미 게임에 참가 되어있습니다'
+
+redis_pool = redis.ConnectionPool(
+    host=REDIS_INFO['host'],
+    port=REDIS_INFO['port'],
+    db=2,
+    password=REDIS_INFO['auth']
+)
 
 # redis_lock_manager = Aioredlock([
 #     {'host': REDIS_URI + '/2'}  # db: 2
@@ -33,29 +41,58 @@ async def get_redis_lock(name):
     return _room_lock[name]
 
 
-class RedisQuery:
+class AioRedisQuery:
     URI = REDIS_URI + '/2'  # db:2
 
     @staticmethod
     async def add_user(room_id, username):
-        redis = await aioredis.create_redis_pool(RedisQuery.URI)
-        with closing(redis):
+        conn = await aioredis.create_redis_pool(AioRedisQuery.URI)
+        with closing(conn):
             async with await get_redis_lock(room_id):
-                await redis.hset('room:' + room_id, username, 1)
+                await conn.hset('room:' + room_id, username, 1)
 
     @staticmethod
     async def pop_user(room_id, username):
-        redis = await aioredis.create_redis_pool(RedisQuery.URI)
-        with closing(redis):
+        conn = await aioredis.create_redis_pool(AioRedisQuery.URI)
+        with closing(conn):
             async with await get_redis_lock(room_id):
-                return await redis.hdel('room:' + room_id, username)
+                return await conn.hdel('room:' + room_id, username)
 
     @staticmethod
     async def exist_user(room_id, username):
-        redis = await aioredis.create_redis_pool(RedisQuery.URI)
-        with closing(redis):
+        conn = await aioredis.create_redis_pool(AioRedisQuery.URI)
+        with closing(conn):
             async with await get_redis_lock(room_id):
-                return await redis.hexists('room:' + room_id, username)
+                return await conn.hexists('room:' + room_id, username)
+
+    @staticmethod
+    async def room_user_cnt(room_id):
+        conn = await aioredis.create_redis_pool(AioRedisQuery.URI)
+        with closing(conn):
+            async with await get_redis_lock(room_id):
+                return await conn.hlen('room:' + room_id)
+
+
+class RedisQuery:
+    @staticmethod
+    def add_user(room_id, username):
+        conn = redis.Redis(connection_pool=redis_pool)
+        return conn.hset('room:' + room_id, username, 1)
+
+    @staticmethod
+    def pop_user(room_id, username):
+        conn = redis.Redis(connection_pool=redis_pool)
+        return conn.hdel('room:' + room_id, username)
+
+    @staticmethod
+    def exist_user(room_id, username):
+        conn = redis.Redis(connection_pool=redis_pool)
+        return conn.hexists('room:' + room_id, username)
+
+    @staticmethod
+    def room_user_cnt(room_id):
+        conn = redis.Redis(connection_pool=redis_pool)
+        return conn.hlen('room:' + room_id)
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -76,15 +113,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 await self.connect_or_raise_if_exceeded_limit()
 
     async def connect_or_raise_if_exceeded_limit(self):
-        if await RedisQuery.exist_user(self.room_name, self.user.username):
+        if RedisQuery.exist_user(self.room_name, self.user.username):
             await self.accept()
             await self.send_error(ROOM_ALREADY_EXIST_MSG, alert_type=1, action='back')
             await self.disconnect(None)
             await self.close()
             return
 
-        room = Room.objects.get(id=self.room_name)
-        if room.now_people <= ROOM_PEOPLE_LIMIT:
+        if RedisQuery.room_user_cnt(self.room_name) <= ROOM_PEOPLE_LIMIT:
             try:
                 # now_people += 1
                 Room.objects.filter(id=self.room_name).update(now_people=F('now_people') + 1)
@@ -92,6 +128,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 pass
             else:
                 self.num_increased = True
+                RedisQuery.add_user(self.room_name, self.user.username)
 
             try:
                 # Join room group
@@ -114,7 +151,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.notice_room_entered()
 
             await self.accept()
-            await RedisQuery.add_user(self.room_name, self.user.username)
 
         else:
             await self.accept()
@@ -145,28 +181,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if self.num_increased:
             # now_people -= 1
             Room.objects.filter(id=self.room_name).update(now_people=F('now_people') - 1)
-
-            loop = asyncio.get_event_loop()
+            print('pop user!!')
+            RedisQuery.pop_user(self.room_name, self.user.username)
 
         if self.group_connected:
             # notice room exit
             await self.notice_room_exit()
 
             if self.num_increased:
-                await asyncio.sleep(1)
+                await asyncio.sleep(1)  # 1 초를 기다렸는데도
                 row = Room.objects.get(id=self.room_name)
                 room_id = row.id
-                if not row.now_people:
-                    row.delete()
-                    await asyncio.gather(
-                        self.channel_layer.group_send(
-                            self.room_info,
-                            {
-                                'type': 'event_room_discard',
-                                'room_id': room_id
-                            }
-                        ),
-                        RedisQuery.pop_user(self.room_name, self.user.username)
+
+                if not row.now_people:  # 사람이 없으면
+                    row.delete()  # 방 삭제
+                    await self.channel_layer.group_send(
+                        self.room_info,
+                        {
+                            'type': 'event_room_discard',
+                            'room_id': room_id
+                        }
                     )
 
             # Leave room group
