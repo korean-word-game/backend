@@ -32,9 +32,9 @@ class Room(models.Model):
         blank=True,
         null=True
     )
-    is_secret = models.BooleanField()
-    password = models.TextField()
+    is_hide = models.BooleanField()
     now_people = models.IntegerField(default=1)
+    is_start = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
