@@ -2,6 +2,7 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 import asyncio
+from contextlib import closing
 
 from django.core import serializers
 from django.db.models import F
@@ -10,15 +11,51 @@ from users.models import User
 from wordgame.models import Room
 from config.settings.base import REDIS_URI
 
-from redlock import RedLockFactory
+from aioredlock import Aioredlock, LockError
+import aioredis
 
 ROOM_INFO = 'room_info'
 ROOM_PEOPLE_LIMIT = 6
 ROOM_EXCEEDED_LIMIT_MSG = '게임에 참가 할 수 없습니다'
+ROOM_ALREADY_EXIST_MSG = '이미 게임에 참가 되어있습니다'
 
-redis_lock = RedLockFactory([
-    {'host': REDIS_URI + '/2'}  # db: 2
-])
+# redis_lock_manager = Aioredlock([
+#     {'host': REDIS_URI + '/2'}  # db: 2
+# ])
+
+_room_lock = {}
+
+
+async def get_redis_lock(name):
+    if not _room_lock.get(name):
+        _room_lock[name] = asyncio.Lock()
+
+    return _room_lock[name]
+
+
+class RedisQuery:
+    URI = REDIS_URI + '/2'  # db:2
+
+    @staticmethod
+    async def add_user(room_id, username):
+        redis = await aioredis.create_redis_pool(RedisQuery.URI)
+        with closing(redis):
+            async with await get_redis_lock(room_id):
+                await redis.hset('room:' + room_id, username, 1)
+
+    @staticmethod
+    async def pop_user(room_id, username):
+        redis = await aioredis.create_redis_pool(RedisQuery.URI)
+        with closing(redis):
+            async with await get_redis_lock(room_id):
+                return await redis.hdel('room:' + room_id, username)
+
+    @staticmethod
+    async def exist_user(room_id, username):
+        redis = await aioredis.create_redis_pool(RedisQuery.URI)
+        with closing(redis):
+            async with await get_redis_lock(room_id):
+                return await redis.hexists('room:' + room_id, username)
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -39,6 +76,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 await self.connect_or_raise_if_exceeded_limit()
 
     async def connect_or_raise_if_exceeded_limit(self):
+        if await RedisQuery.exist_user(self.room_name, self.user.username):
+            await self.accept()
+            await self.send_error(ROOM_ALREADY_EXIST_MSG, alert_type=1, action='back')
+            await self.disconnect(None)
+            await self.close()
+            return
+
         room = Room.objects.get(id=self.room_name)
         if room.now_people <= ROOM_PEOPLE_LIMIT:
             try:
@@ -70,6 +114,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.notice_room_entered()
 
             await self.accept()
+            await RedisQuery.add_user(self.room_name, self.user.username)
 
         else:
             await self.accept()
@@ -113,12 +158,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 room_id = row.id
                 if not row.now_people:
                     row.delete()
-                    await self.channel_layer.group_send(
-                        self.room_info,
-                        {
-                            'type': 'event_room_discard',
-                            'room_id': room_id
-                        }
+                    await asyncio.gather(
+                        self.channel_layer.group_send(
+                            self.room_info,
+                            {
+                                'type': 'event_room_discard',
+                                'room_id': room_id
+                            }
+                        ),
+                        RedisQuery.pop_user(self.room_name, self.user.username)
                     )
 
             # Leave room group
