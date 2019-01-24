@@ -4,7 +4,7 @@
     <head>
         <title>메인</title>
         <script>
-            window.onload = (qualifiedName, value) => {
+            window.onload = (e) => {
                 const uuid = '{{ uuid }}';
                 let chatSocket = new WebSocket(
                     'ws://' + window.location.host +
