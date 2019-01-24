@@ -1,8 +1,16 @@
+import re
+
 from django.shortcuts import redirect
 from .models import Word, WordType
 
 from users.models import User
 import hgtk
+
+
+def is_hangul(text):
+    if re.search('[^가-힣]', text):  # 한글이 아닌 글자가 있으면
+        return False
+    return True
 
 
 def auto_login_controller(req):
@@ -17,8 +25,10 @@ def auto_login_controller(req):
             return None, None
     return isLogin, user
 
+
 def search_word(type: int, word):
     word_type = WordType.objects.get(id=type)
+
 
 def duu(p0, p1):
     p0 = hgtk.letter.decompose(p0[0])

@@ -3,42 +3,132 @@
 
     <head>
         <title>메인</title>
+        <script>
+            window.onload = (qualifiedName, value) => {
+                const uuid = '{{ uuid }}';
+                let chatSocket = new WebSocket(
+                    'ws://' + window.location.host +
+                    '/ws/');
+                let mode = '';
+                if ('{{ mode }}' === '클래식') {
+                    mode = 'classic'
+                }
+                if ('{{ mode }}' === '미션') {
+                    mode = 'mission'
+                }
+
+                chatSocket.onopen = (e) => {
+                    chatSocket.send(JSON.stringify({
+                        'query': 'get_rooms',
+                        'type': 'query',
+                        'callback': uuid,
+                        'filter': mode
+                    }));
+                };
+
+                chatSocket.onmessage = function (e) {
+                    let data = JSON.parse(e.data);
+                    if (data['type'] === 'room_info_changed') {
+                        Object.keys(data['result']).forEach((key)=>{
+                            document.querySelector('#room_'+key+'_'+data['room_id']).innerHTML = data['result'][key];
+                            if (key === 'now_people' && data['result']['now_people']==='6'){
+                                document.querySelector('#room_full_' + data['room_id']).setAttribute('disabled')
+                            }
+                            if (key === 'now_people' && data['result']['now_people']!=='6'){
+                                document.querySelector('#room_full_' + data['room_id']).removeAttribute('disabled')
+                            }
+                        })
+
+                    }
+                    if (data['type'] === 'query') {
+                        if (data['callback'] === uuid) {
+                            let result = JSON.parse(data['result']);
+                            let result_list = document.querySelector('#search_list')
+                            result.forEach((room, index, array) => {
+                                result_list.innerHTML += '<div id=room_' + room.pk + ' class="card border-warning text-right col-9 col-md-6 m-2">\n' +
+                                    '                <div class="card-body">\n' +
+                                    '                    <h4 id=room_title_' + room.pk + ' class="card-title">' + room.fields.title + '</h4>\n' +
+                                    '                    <p id=room_now_people_' + room.pk + ' class="card-text">인원수 ' + room.fields.now_people + '/6</p>\n' +
+                                    '                    <a id=room_full_' + room.pk + ' href="/chat/' + room.pk + '" class="btn btn-success">입장</a>\n' +
+                                    '                </div>\n' +
+                                    '            </div>'
+                            })
+
+                        }
+                    }
+                };
+
+
+                chatSocket.onclose = function (e) {
+                    console.error('Chat socket closed unexpectedly');
+                };
+            }
+        </script>
     </head>
     <body class="design">
     <div class="container mt-5">
         <h2>{{ mode }}</h2>
-        <div class="row justify-content-center">
-            <div class="card border-warning text-right col-9 col-md-6 m-2">
-                <div class="card-body">
-                    <h4 class="card-title">방모드~~~</h4>
-                    <p class="card-text">인원수~~</p>
-                    <a href="#" class="btn btn-success">입장</a>
-                </div>
-            </div>
-            <div class="card border-warning text-right col-9 col-md-6 m-2">
-                <div class="card-body">
-                    <h4 class="card-title">방모드~~~</h4>
-                    <p class="card-text">인원수~~</p>
-                    <a href="#" class="btn btn-success">입장</a>
-                </div>
-            </div>
-            <div class="card border-warning text-right col-9 col-md-6 m-2">
-                <div class="card-body">
-                    <h4 class="card-title">방모드~~~</h4>
-                    <p class="card-text">인원수~~</p>
-                    <a href="#" class="btn btn-success">입장</a>
-                </div>
-            </div>
-            <div class="card border-warning text-right col-9 col-md-6 m-2">
-                <div class="card-body">
-                    <h4 class="card-title">방모드~~~</h4>
-                    <p class="card-text">인원수~~</p>
-                    <a href="#" class="btn btn-success">입장</a>
+        <div class="row justify-content-center" id="search_list">
+        </div>
+        <a href="{% url 'wordgameMain' %}" class="btn btn-info col-9 col-md-6 m-2">돌아가기</a>
+        <button type="button" class="btn btn-secondary col-9 col-md-6 m-2" data-toggle="modal" data-target="#addModal">
+            방 추가하기
+        </button>
+
+        <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addModalLabel">방 추가</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form action="{% url 'makeRoom' %}" accept-charset="utf-8" name="login"
+                          method="post"> {% csrf_token %}
+                        <div class="modal-body">
+
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="방이름" name="title"
+                                       aria-label="Username"
+                                       aria-describedby="basic-addon1" required>
+                            </div>
+                            <div class="row justify-content-center mt-3">
+                                <div class="form-check col-6">
+                                    <input class="form-check-input" type="radio" name="mode" id="Radios1"
+                                           value="1" checked>
+                                    <label class="form-check-label" for="1">
+                                        클래식 모드
+                                    </label>
+                                </div>
+                                <div class="form-check col-6">
+                                    <input class="form-check-input" type="radio" name="mode" id="Radios2"
+                                           value="2">
+                                    <label class="form-check-label" for="2">
+                                        미션 모드
+                                    </label>
+                                </div>
+                                <div class="form-check col-9 mt-2">
+                                    <input class="form-check-input" type="checkbox" value=True name="is_hide"
+                                           id="is_hide">
+                                    <label class="form-check-label" for="is_hide">
+                                        숨겨진 방
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+                            <button type="submit" class="btn btn-primary">추가하기</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-        <a href="{% url 'wordgameMain' %}" class="btn btn-info col-9 col-md-6 m-2">돌아가기</a>
     </div>
+
     </body>
 
 {% endblock %}

@@ -7,6 +7,7 @@ import json
 from django.views import View
 
 from users.views import check_login
+from wordgame.models import Room
 from wordgame.utils import auto_login_controller
 
 
@@ -14,13 +15,7 @@ def index(request):
     return render(request, 'chat/index.html', {})
 
 
-def room(request, room_name):
-    return render(request, 'chat/room.html', {
-        'room_name_json': mark_safe(json.dumps(room_name))
-    })
-
-
-class Room(View):
+class room(View):
     rDict = dict(now='main')
 
     def get(self, req, room_name):
@@ -28,6 +23,7 @@ class Room(View):
         isLogin, user = auto_login_controller(req)
 
         rDict = dict(isLogin=isLogin, now='main', user=user)
-        rDict['room_name']=mark_safe(json.dumps(room_name))
+        room = Room.objects.get(pk=room_name)
+        rDict['room'] = room
+        rDict['mode'] = True if room.mode == 2 else False
         return render(req, 'chat/room.html', rDict)
-
