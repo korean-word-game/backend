@@ -28,6 +28,12 @@
 
                 chatSocket.onmessage = function (e) {
                     let data = JSON.parse(e.data);
+                    if (data['type'] === 'room_discard') {
+                        let result_list = document.querySelector('#room_'+data['room_id'])
+                        if (result_list){
+                            result_list.remove()
+                        }
+                    }
                     if (data['type'] === 'room_created') {
                         let room = JSON.parse(data['result']);
                         if (room.fields.mode === '1' && mode === 'classic') {
