@@ -38,6 +38,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data=None, bytes_data=None):
         if text_data:
             text_data_json = json.loads(text_data)
+            print('receive data:', [text_data_json])
             command_type = text_data_json.get('type')
 
             if command_type == 'chat_message':
@@ -47,13 +48,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
             # Send message to room group
 
     async def message_received(self, message):
+        response_data = {
+            'type': 'chat_message',
+            'user': self.user.username,
+            'message': message
+        }
+        print('send data:',[response_data])
         await self.channel_layer.group_send(
             self.room_group_name,
-            {
-                'type': 'chat_message',
-                'user': self.user.username,
-                'message': message
-            }
+            response_data
         )
 
     # Receive message from room group
