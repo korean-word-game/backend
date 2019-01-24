@@ -4,11 +4,11 @@
         <title>게임</title>
         <script>
             window.onload = () => {
-                var roomName = {{ room_name }};
+                var roomName = '{{ room.title }}';
 
                 var chatSocket = new WebSocket(
                     'ws://' + window.location.host +
-                    '/ws/chat/' + roomName + '/');
+                    '/ws/chat/' + {{ room.pk }} + '/');
 
                 chatSocket.onmessage = function (e) {
                     var data = JSON.parse(e.data);
