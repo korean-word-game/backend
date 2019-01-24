@@ -1,47 +1,210 @@
-<!-- chat/templates/chat/room.html -->
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8"/>
-    <title>Chat Room</title>
-</head>
-<body>
-    <textarea id="chat-log" cols="100" rows="20"></textarea><br/>
-    <input id="chat-message-input" type="text" size="100"/><br/>
-    <input id="chat-message-submit" type="button" value="Send"/>
-</body>
-<script>
-    var roomName = {{ room_name_json }};
+{% extends 'wordgame/../util/base.html' %}
+{% block content %}
+    <head>
+        <title>게임</title>
+        <script>
+            window.onload = () => {
+                var roomName = {{ room_name }};
 
-    var chatSocket = new WebSocket(
-        'ws://' + window.location.host +
-        '/ws/chat/' + roomName + '/');
+                var chatSocket = new WebSocket(
+                    'ws://' + window.location.host +
+                    '/ws/chat/' + roomName + '/');
 
-    chatSocket.onmessage = function(e) {
-        var data = JSON.parse(e.data);
-        var message = data['message'];
-        document.querySelector('#chat-log').value += (message + '\n');
-    };
+                chatSocket.onmessage = function (e) {
+                    var data = JSON.parse(e.data);
+                    var message = data['message'];
+                    let chatlog = document.getElementById('chat-log')
+                    chatlog.innerHTML += message + "<br>";
+                    let chatlogscroll = document.getElementById('chat-log-scroll')
+                    chatlogscroll.scrollTop = chatlogscroll.scrollHeight;
 
-    chatSocket.onclose = function(e) {
-        console.error('Chat socket closed unexpectedly');
-    };
+                };
 
-    document.querySelector('#chat-message-input').focus();
-    document.querySelector('#chat-message-input').onkeyup = function(e) {
-        if (e.keyCode === 13) {  // enter, return
-            document.querySelector('#chat-message-submit').click();
-        }
-    };
+                chatSocket.onclose = function (e) {
+                    console.error('Chat socket closed unexpectedly');
+                };
 
-    document.querySelector('#chat-message-submit').onclick = function(e) {
-        var messageInputDom = document.querySelector('#chat-message-input');
-        var message = messageInputDom.value;
-        chatSocket.send(JSON.stringify({
-            'message': message
-        }));
+                document.querySelector('#chat-message-input').focus();
+                document.querySelector('#chat-message-input').onkeyup = function (e) {
+                    if (e.keyCode === 13) {  // enter, return
+                        var messageInputDom = document.querySelector('#chat-message-input');
+                        var message = messageInputDom.value;
+                        if (message !== '') {
+                            chatSocket.send(JSON.stringify({
+                                'message': '{{ user.username }}'+': '+message
+                            }));
 
-        messageInputDom.value = '';
-    };
-</script>
-</html>
+                            messageInputDom.value = '';
+
+                        }
+
+
+                    }
+                };
+            }
+        </script>
+    </head>
+    <body>
+    <div class="container mt-5">
+        <h2><span class="badge badge-success">승리조건 : </span></h2>
+        <div class="row justify-content-center">
+            <div class="col-9 col-md-7">
+                <div class="card col-12 mt-3 mb-3">
+                    <div class="card-body" style="font-size: 1.25em;">
+                        현재 단어 :
+                        <strong>
+                            가락지빵
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="card text-white bg-dark col-12 mb-3">
+                    <div class="card-body">
+                        단어 설명 :
+                    </div>
+                </div>
+
+                <div class="card border-warning col-12 mb-3" style="overflow-x: scroll; white-space:nowrap">
+                    <div class="card-body">
+                        단어 로그
+                    </div>
+                </div>
+
+                <div class="card border-info col-12 mb-3" id="chat-log-scroll"
+                     style="overflow-y: scroll; overflow-x: scroll; height:200px; ">
+                    <div class="card-body" style="text-align: left">
+                        <span id="chat-log"></span>
+                    </div>
+                </div>
+                <div class="input-group border-info">
+                    <input type="text" id="chat-message-input" class="form-control border-info" placeholder="입력">
+                </div>
+
+
+            </div>
+            <div class="col-9 col-md-5">
+                <div class="row justify-content-center">
+                    <div class="card col-5 mt-3 ml-2 mr-2">
+                        <div class="card-body">
+                            A
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="lRadios1" id="lRadios1-1"
+                                   value="option1" checked>
+                            <label class="form-check-label" for="lRadios1-1">
+                                문화어
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="lRadios1" id="lRadios1-2"
+                                   value="option2">
+                            <label class="form-check-label" for="lRadios1-2">
+                                표준어
+                            </label>
+                        </div>
+                    </div>
+                    <div class="card col-5 mt-3 ml-2 mr-2">
+                        <div class="card-body">
+                            B
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="lRadios2" id="lRadios2-1"
+                                   value="option1" checked>
+                            <label class="form-check-label" for="lRadios2-1">
+                                문화어
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="lRadios2" id="lRadios2-2"
+                                   value="option2">
+                            <label class="form-check-label" for="lRadios2-2">
+                                표준어
+                            </label>
+                        </div>
+                    </div>
+                    <div class="card col-5 mt-3 ml-2 mr-2">
+                        <div class="card-body">
+                            C
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-1"
+                                   value="option1" checked>
+                            <label class="form-check-label" for="lRadios1">
+                                문화어
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-2"
+                                   value="option2">
+                            <label class="form-check-label" for="lRadios2">
+                                표준어
+                            </label>
+                        </div>
+                    </div>
+                    <div class="card col-5 mt-3 ml-2 mr-2">
+                        <div class="card-body">
+                            D
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-1"
+                                   value="option1" checked>
+                            <label class="form-check-label" for="lRadios1">
+                                문화어
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-2"
+                                   value="option2">
+                            <label class="form-check-label" for="lRadios2">
+                                표준어
+                            </label>
+                        </div>
+                    </div>
+                    <div class="card col-5 mt-3 ml-2 mr-2">
+                        <div class="card-body">
+                            E
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-1"
+                                   value="option1" checked>
+                            <label class="form-check-label" for="lRadios1">
+                                문화어
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-2"
+                                   value="option2">
+                            <label class="form-check-label" for="lRadios2">
+                                표준어
+                            </label>
+                        </div>
+                    </div>
+                    <div class="card col-5 mt-3 ml-2 mr-2">
+                        <div class="card-body">
+                            F
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-1"
+                                   value="option1" checked>
+                            <label class="form-check-label" for="lRadios1">
+                                문화어
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-2"
+                                   value="option2">
+                            <label class="form-check-label" for="lRadios2">
+                                표준어
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success col-11 mt-3">게임시작!</button>
+            </div>
+
+        </div>
+
+    </div>
+    </div>
+    </body>
+{% endblock %}
