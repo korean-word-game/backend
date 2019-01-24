@@ -96,7 +96,7 @@ class LobbyConsumer(AsyncWebsocketConsumer):
             command_type = text_data_json.get('type')
 
             if command_type == 'query':
-                if text_data_json.get('get_rooms'):
+                if text_data_json.get('query') == 'get_rooms':
                     await self.event_get_rooms(text_data_json)
 
             # if command_type == 'chat_message':
