@@ -28,16 +28,24 @@
 
                 chatSocket.onmessage = function (e) {
                     let data = JSON.parse(e.data);
+                    if (data['type'] === 'error') {
+                        if(data['alert_type']===1){
+                            alert(data['alert']);
+                        }
+                        if(data['redirect'])
+                            location.href = data['redirect']
+                        if(data['action']==='back')
+                            history.back()
+                    }
                     if (data['type'] === 'room_discard') {
-                        let result_list = document.querySelector('#room_'+data['room_id'])
-                        if (result_list){
+                        let result_list = document.querySelector('#room_' + data['room_id'])
+                        if (result_list) {
                             result_list.remove()
                         }
                     }
                     if (data['type'] === 'room_created') {
                         let room = JSON.parse(data['result']);
-                        if (room.fields.mode === '1' && mode === 'classic') {
-
+                        if (room.fields.mode === 1 && mode === 'classic') {
                             let result_list = document.querySelector('#search_list')
                             result_list.innerHTML += '<div id=room_' + room.pk + ' class="card border-warning text-right col-9 col-md-6 m-2">\n' +
                                 '                <div class="card-body">\n' +
@@ -48,7 +56,7 @@
                                 '            </div>'
 
                         }
-                        if (room.fields.mode === '2' && mode === 'mission') {
+                        if (room.fields.mode === 2 && mode === 'mission') {
                             let result_list = document.querySelector('#search_list')
                             let howtowin = '';
                             switch (room.fields.how_to_win) {
@@ -205,28 +213,28 @@
 "                                    </div>\n"+
 "                                    <div class=\"form-check col-12\">\n"+
 "                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
-"                                               value=\"2\">\n"+
+"                                               value=\"3\">\n"+
 "                                        <label class=\"form-check-label\" for=\"3\">\n"+
 "                                            글자수 총합이 적으면 이긴다!\n"+
 "                                        </label>\n"+
 "                                    </div>\n"+
 "                                    <div class=\"form-check col-12\">\n"+
 "                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
-"                                               value=\"2\">\n"+
+"                                               value=\"4\">\n"+
 "                                        <label class=\"form-check-label\" for=\"4\">\n"+
 "                                            금지어를 말하면 진다!\n"+
 "                                        </label>\n"+
 "                                    </div>\n"+
 "                                    <div class=\"form-check col-12\">\n"+
 "                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
-"                                               value=\"2\">\n"+
+"                                               value=\"5\">\n"+
 "                                        <label class=\"form-check-label\" for=\"5\">\n"+
 "                                            n번째 글자를 쓰면 이긴다!\n"+
 "                                        </label>\n"+
 "                                    </div>\n"+
 "                                    <div class=\"form-check col-12\">\n"+
 "                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
-"                                               value=\"2\">\n"+
+"                                               value=\"6\">\n"+
 "                                        <label class=\"form-check-label\" for=\"6\">\n"+
 "                                            글자수 총합이 크면 이긴다!\n"+
 "                                        </label>\n"+

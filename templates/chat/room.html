@@ -6,17 +6,36 @@
             window.onload = () => {
                 var roomName = '{{ room.title }}';
 
+                let players = []
+
                 var chatSocket = new WebSocket(
                     'ws://' + window.location.host +
                     '/ws/chat/' + {{ room.pk }} +'/');
+                let howtowin = ' ';
+                if ('{{ room.mode }}' === '클래식') {
+                    howtowin += '실력으로 정정당당한 승부!';
+                } else if ('{{ room.mode }}' === '미션') {
+                    howtowin += '{{ room.how_to_win }}'
+                }
+                console.log(document.getElementById('howtowin'))
+                document.getElementById('howtowin').innerText += howtowin;
 
                 chatSocket.onmessage = function (e) {
                     var data = JSON.parse(e.data);
+                    if (data['type'] === 'error') {
+                        if (data['alert_type'] === 1) {
+                            alert(data['alert']);
+                        }
+                        if (data['redirect'])
+                            location.href = data['redirect']
+                        if (data['action'] === 'back')
+                            history.back()
+                    }
                     if (data['type'] === 'ping') {
                         chatSocket.send(JSON.stringify({
-                                'callback': data['callback'],
-                                'type': 'pong'
-                            }));
+                            'callback': data['callback'],
+                            'type': 'pong'
+                        }));
                     }
                     if (data['type'] === 'chat_message') {
                         var message = data['message'];
@@ -25,6 +44,8 @@
                         chatlog.innerHTML += user + ': ' + message + "<br>";
                         let chatlogscroll = document.getElementById('chat-log-scroll')
                         chatlogscroll.scrollTop = chatlogscroll.scrollHeight;
+
+
                     }
                     if (data['type'] === 'room_entered') {
                         var user = data['user'];
@@ -32,13 +53,63 @@
                         chatlog.innerHTML += user + '님이 입장하셨습니다.' + "<br>";
                         let chatlogscroll = document.getElementById('chat-log-scroll')
                         chatlogscroll.scrollTop = chatlogscroll.scrollHeight;
+                        if(user === '{{ user.username }}'){
+                            document.getElementById('players').innerHTML += "<div id='player_" + user + "' class=\"card col-5 mt-3 ml-2 mr-2\">\n" +
+                            "                        <div class=\"card-body\">\n" +
+                            "                            " + user + "\n" +
+                            "                        </div>\n" +
+                            "                        <div class=\"form-check\">\n" +
+                            "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_1\"\n" +
+                            "                                   value=\"1\" checked>\n" +
+                            "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
+                            "                                문화어\n" +
+                            "                            </label>\n" +
+                            "                        </div>\n" +
+                            "                        <div class=\"form-check mb-3\">\n" +
+                            "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_2\"\n" +
+                            "                                   value=\"2\">\n" +
+                            "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
+                            "                                표준어\n" +
+                            "                            </label>\n" +
+                            "                        </div>\n" +
+                            "                    </div>"
+                        }
+                        else{
+                            document.getElementById('players').innerHTML += "<div id='player_" + user + "' class=\"card col-5 mt-3 ml-2 mr-2\">\n" +
+                            "                        <div class=\"card-body\">\n" +
+                            "                            " + user + "\n" +
+                            "                        </div>\n" +
+                            "                        <div class=\"form-check disabled\">\n" +
+                            "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_1\"\n" +
+                            "                                   value=\"1\" disabled checked>\n" +
+                            "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
+                            "                                문화어\n" +
+                            "                            </label>\n" +
+                            "                        </div>\n" +
+                            "                        <div class=\"form-check disabled mb-3\">\n" +
+                            "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_2\"\n" +
+                            "                                   value=\"2\" disabled>\n " +
+                            "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
+                            "                                표준어\n" +
+                            "                            </label>\n" +
+                            "                        </div>\n" +
+                            "                    </div>"
+                        }
+                        players.push(user)
+                        console.log(players)
                     }
                     if (data['type'] === 'room_exit') {
                         var user = data['user'];
                         let chatlog = document.getElementById('chat-log')
+                        document.getElementById('player_' + user).remove()
                         chatlog.innerHTML += user + '님이 퇴장하셨습니다.' + "<br>";
                         let chatlogscroll = document.getElementById('chat-log-scroll')
                         chatlogscroll.scrollTop = chatlogscroll.scrollHeight;
+                        var search = players.indexOf(user);
+                        if (search !== -1) {
+                            players.splice(search, 1); // "A"를 찾아서 삭제한다.
+                        }
+                        console.log(players)
                     }
                 };
 
@@ -71,7 +142,7 @@
     <body>
     <div class="container mt-5">
         <h3><span class="badge badge-primary">{{ room.title }} </span></h3>
-        <h2><span class="badge badge-success">승리조건 : </span></h2>
+        <h2><span class="badge badge-success" id="howtowin">승리조건: </span></h2>
         <div class="row justify-content-center">
             <div class="col-9 col-md-7">
                 <div class="card col-12 mt-3 mb-3">
@@ -108,185 +179,110 @@
 
             </div>
             <div class="col-9 col-md-5">
-                <div class="row justify-content-center">
-                    <div class="card col-5 mt-3 ml-2 mr-2">
-                        <div class="card-body">
-                            A
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="lRadios1" id="lRadios1-1"
-                                   value="option1" checked>
-                            <label class="form-check-label" for="lRadios1-1">
-                                문화어
-                            </label>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="lRadios1" id="lRadios1-2"
-                                   value="option2">
-                            <label class="form-check-label" for="lRadios1-2">
-                                표준어
-                            </label>
-                        </div>
-                    </div>
-                    <div class="card col-5 mt-3 ml-2 mr-2">
-                        <div class="card-body">
-                            B
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="lRadios2" id="lRadios2-1"
-                                   value="option1" checked>
-                            <label class="form-check-label" for="lRadios2-1">
-                                문화어
-                            </label>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="lRadios2" id="lRadios2-2"
-                                   value="option2">
-                            <label class="form-check-label" for="lRadios2-2">
-                                표준어
-                            </label>
-                        </div>
-                    </div>
-                    <div class="card col-5 mt-3 ml-2 mr-2">
-                        <div class="card-body">
-                            C
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-1"
-                                   value="option1" checked>
-                            <label class="form-check-label" for="lRadios1">
-                                문화어
-                            </label>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-2"
-                                   value="option2">
-                            <label class="form-check-label" for="lRadios2">
-                                표준어
-                            </label>
-                        </div>
-                    </div>
-                    <div class="card col-5 mt-3 ml-2 mr-2">
-                        <div class="card-body">
-                            D
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-1"
-                                   value="option1" checked>
-                            <label class="form-check-label" for="lRadios1">
-                                문화어
-                            </label>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-2"
-                                   value="option2">
-                            <label class="form-check-label" for="lRadios2">
-                                표준어
-                            </label>
-                        </div>
-                    </div>
-                    <div class="card col-5 mt-3 ml-2 mr-2">
-                        <div class="card-body">
-                            E
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-1"
-                                   value="option1" checked>
-                            <label class="form-check-label" for="lRadios1">
-                                문화어
-                            </label>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-2"
-                                   value="option2">
-                            <label class="form-check-label" for="lRadios2">
-                                표준어
-                            </label>
-                        </div>
-                    </div>
-                    <div class="card col-5 mt-3 ml-2 mr-2">
-                        <div class="card-body">
-                            F
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-1"
-                                   value="option1" checked>
-                            <label class="form-check-label" for="lRadios1">
-                                문화어
-                            </label>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="lRadios" id="lRadios1-2"
-                                   value="option2">
-                            <label class="form-check-label" for="lRadios2">
-                                표준어
-                            </label>
-                        </div>
-                    </div>
+                <div class="row justify-content-center" id="players">
                 </div>
                 <button type="submit" class="btn btn-success col-5 mt-3 mr-3 mb-5">게임시작!</button>
                 <button type="button" class="btn btn-info col-5 mt-3 mb-5" data-toggle="modal"
                         data-target="#addModal">
                     방 수정하기
                 </button>
-
                 <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel"
                      aria-hidden="true">
                     <div class="modal-dialog" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="addModalLabel">방 수정</h5>
+                                <h5 class="modal-title" id="addModalLabel">방 추가</h5>
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
-                            <div class="modal-body">
+                            <form action="{% url 'makeRoom' %}" accept-charset="utf-8" name="login"
+                                  method="post"> {% csrf_token %}
+                                <div class="modal-body">
 
-                                <div class="input-group">
-                                    <input type="text" class="form-control" placeholder="방이름" name="title"
-                                           aria-label="Username"
-                                           aria-describedby="basic-addon1" required>
-                                </div>
-                                <div class="row justify-content-center mt-3">
-                                    <div class="form-check col-6">
-                                        <input class="form-check-input" type="radio" name="mode" id="Radios1"
-                                               value="1" checked>
-                                        <label class="form-check-label" for="1">
-                                            클래식 모드
-                                        </label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" placeholder="방이름" name="title"
+                                               aria-label="Username"
+                                               aria-describedby="basic-addon1" required>
                                     </div>
-                                    <div class="form-check col-6">
-                                        <input class="form-check-input" type="radio" name="mode" id="Radios2"
-                                               value="2">
-                                        <label class="form-check-label" for="2">
-                                            미션 모드
-                                        </label>
-                                    </div>
-                                    <div class="form-check col-6">
-                                        <input class="form-check-input" type="radio" name="mode" id="Radios2"
-                                               value="2">
-                                        <label class="form-check-label" for="2">
-                                            미션 모드
-                                        </label>
-                                    </div>
-                                    <div class="form-check col-9 mt-2">
-                                        <input class="form-check-input" type="checkbox" value=True name="is_hide"
-                                               id="is_hide">
-                                        <label class="form-check-label" for="is_hide">
-                                            숨겨진 방
-                                        </label>
-                                    </div>
-                                </div>
+                                    <div class="row justify-content-center mt-3">
+                                        <div class="form-check col-6">
+                                            <input class="form-check-input" type="radio" name="mode" id="Radios1"
+                                                   value="1" checked
+                                                   onclick="document.querySelector('#select_howtowin').innerHTML=''">
+                                            <label class="form-check-label" for="1">
+                                                클래식 모드
+                                            </label>
+                                        </div>
+                                        <div class="form-check col-6">
+                                            <input class="form-check-input" type="radio" name="mode" id="Radios2"
+                                                   value="2" onclick='document.querySelector("#select_howtowin").innerHTML = "<h5>미션 선택</h5>\n"+
+"                                    <div style=\"text-align:left;\">\n"+
+"                                    <div class=\"form-check col-12\">\n"+
+"                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
+"                                               value=\"2\">\n"+
+"                                        <label class=\"form-check-label\" for=\"2\">\n"+
+"                                            음절을 모두 모면 이긴다!\n"+
+"                                        </label>\n"+
+"                                    </div>\n"+
+"                                    <div class=\"form-check col-12\">\n"+
+"                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
+"                                               value=\"3\">\n"+
+"                                        <label class=\"form-check-label\" for=\"3\">\n"+
+"                                            글자수 총합이 적으면 이긴다!\n"+
+"                                        </label>\n"+
+"                                    </div>\n"+
+"                                    <div class=\"form-check col-12\">\n"+
+"                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
+"                                               value=\"4\">\n"+
+"                                        <label class=\"form-check-label\" for=\"4\">\n"+
+"                                            금지어를 말하면 진다!\n"+
+"                                        </label>\n"+
+"                                    </div>\n"+
+"                                    <div class=\"form-check col-12\">\n"+
+"                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
+"                                               value=\"5\">\n"+
+"                                        <label class=\"form-check-label\" for=\"5\">\n"+
+"                                            n번째 글자를 쓰면 이긴다!\n"+
+"                                        </label>\n"+
+"                                    </div>\n"+
+"                                    <div class=\"form-check col-12\">\n"+
+"                                        <input class=\"form-check-input\" type=\"radio\" name=\"how_to_win\" id=\"Radios2\"\n"+
+"                                               value=\"6\">\n"+
+"                                        <label class=\"form-check-label\" for=\"6\">\n"+
+"                                            글자수 총합이 크면 이긴다!\n"+
+"                                        </label>\n"+
+"                                    </div>"+
+"                                    </div>"'>
+                                            <label class="form-check-label" for="2">
+                                                미션 모드
+                                            </label>
+                                        </div>
+                                        <div id="select_howtowin">
 
-                            </div>
+                                        </div>
+                                        <div class="form-check col-9 mt-2">
+                                            <input class="form-check-input" type="checkbox" value=True name="is_hide"
+                                                   id="is_hide">
+                                            <label class="form-check-label" for="is_hide">
+                                                숨겨진 방
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+                                    <button type="submit" class="btn btn-primary">추가하기</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
+
             </div>
 
         </div>
-
-    </div>
     </div>
     </body>
 {% endblock %}
