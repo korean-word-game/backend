@@ -7,4 +7,5 @@ from django.conf.urls import url, include
 
 urlpatterns = [
     path('', views.wordgameMain.as_view(), name='wordgameMain'),
+    path('ingame', views.wordgameIngame.as_view(), name='wordgameIngame'),
 ]

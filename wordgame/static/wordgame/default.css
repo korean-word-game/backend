@@ -10,7 +10,13 @@ nav {
 
 .design1 {
     text-align: center;
-    margin-top: 175px;
+    margin-top: 150px;
+}
+.design_ingame{
+    text-align: center;
+}
+.design{
+    text-align: center;
 }
 
 .form_design1 {
@@ -22,3 +28,6 @@ nav {
     border-radius: 7px;
 }
 
+.blank_20{
+    height: 20px;
+}

@@ -1,0 +1,56 @@
+{% extends 'wordgame/../util/base.html' %}
+{% block content %}
+    <head>
+        <title>게임</title>
+    </head>
+    <body>
+    <div class="container mt-5">
+        <h2><span class="badge badge-success">승리조건 : </span></h2>
+        <div class="row justify-content-center">
+            <div class="col-9 col-md-6">
+                <div class="card col-12 mt-3 mb-3">
+                    <div class="card-body" style="font-size: 1.25em;">
+                        현재 단어 :
+                        <strong>
+                            가락지빵
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="card text-white bg-dark col-12 mb-3">
+                    <div class="card-body">
+                        단어 설명 :
+                    </div>
+                </div>
+
+                <div class="card border-warning col-12 mb-3" style="overflow-x: scroll; white-space:nowrap">
+                    <div class="card-body">
+                        단어 로그
+                    </div>
+                </div>
+
+                <div class="card border-info col-12 mb-3" style="overflow-y: scroll; overflow-x: scroll; height:200px; ">
+                    <div class="card-body">
+                        채팅 로그
+                    </div>
+                </div>
+                <div class="input-group border-info">
+                    <input type="text" class="form-control border-info" placeholder="입력">
+                </div>
+
+
+            </div>
+            <div class="col-9 col-md-6">
+
+                <div class="card col-12 mt-3 mb-3">
+                    <div class="card-body">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    </div>
+    </body>
+{% endblock %}

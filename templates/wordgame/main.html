@@ -3,8 +3,8 @@
     <head>
         <title>메인</title>
     </head>
-    <body class="design1">
-    <div class="container">
+    <body class="design">
+    <div class="container mt-5">
         <h1>잇다</h1>
         <br>
         {% if isLogin %}
@@ -66,12 +66,108 @@
         {% endif %}
         <br>
         <div class="row justify-content-center">
-            <button type="submit" class="btn btn-primary col-9 col-md-6">게임 시작</button>
+            <button type="button" class="btn btn-primary col-9 col-md-6" data-toggle="modal"
+                    data-target=".bd-example-modal-lg">게임 시작
+            </button>
+
+            <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="row justify-content-center">
+                            <div class="col-6 ">
+                                <h2 class="mb-2 mt-4">인공지능</h2>
+                                <input type="button" onclick="location.href='{% url 'signup' %}'"
+                                       class="btn btn-success col-10 mb-2 mt-2" value="쉬움">
+                                <input type="button" onclick="location.href='{% url 'signup' %}'"
+                                       class="btn btn-warning col-10 mb-2 mt-2" value="보통">
+                                <input type="button" onclick="location.href='{% url 'signup' %}'"
+                                       class="btn btn-danger col-10 mb-4 mt-2" value="어려움">
+                            </div>
+                            <div class="col-6">
+                                <h2 class="mb-2 mt-4">멀티</h2>
+                                <input type="button" onclick="location.href='{% url 'signup' %}'"
+                                       class="btn btn-success col-10 mb-2 mt-2" value="클래식"
+                                        {% if not isLogin %}
+                                       disabled
+                                        {% endif %}
+                                >
+                                <input type="button" onclick="location.href='{% url 'signup' %}'"
+                                       class="btn btn-warning col-10 mb-2 mt-2" value="미션"
+                                        {% if not isLogin %}
+                                       disabled
+                                        {% endif %}
+                                >
+                                <input type="button" onclick="location.href='{% url 'signup' %}'"
+                                       class="btn btn-danger col-10 mb-4 mt-2" value="랭크(준비중)"
+                                       disabled
+                                >
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
         </div>
         <br>
 
         <div class="row justify-content-center">
-            <button type="submit" class="btn btn-info col-9 col-md-6">게임 설명</button>
+            <button type="button" class="btn btn-info col-9 col-md-6" data-toggle="modal"
+                    data-target=".bd-example-modal-lg2">게임 설명
+            </button>
+
+            <div class="modal fade bd-example-modal-lg2" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-lg2">
+                    <div class="modal-content">
+
+                        <div class="modal-body">
+                        멀티 모드<br><br>
+
+                        클래식 모드<br><br>
+
+                        문화어 / 한국어 중에 선택하세요.<br>
+                        낱말의 끝음절을 이어나가 끝까지 살아남으세요.<br>
+                        각 분야 최고의 전문가가 되어보세요.<br><br>
+
+                        미션 모드<br><br>
+
+                        3개의 미션에서 하나를 배정받아요.<br>
+                        미션에 성공하여, 승리를 쟁취하세요.<br><br>
+
+                        1. 음절 모으기 모드<br><br>
+
+                        시작 전 3개의 미션 음절을 받아요.<br>
+                        이 음절을 끝말로 단어를 만들면, 미션 음절을 획득할 수 있어요.<br>
+                        먼저 2개 이상을 획득하여 승리를 쟁취하세요!<br><br>
+
+                        2. 총합 모드 (多 / 少)<br><br>
+
+                        시작 전 많게, 혹은 적게 말하기 미션과 턴 횟수를 받아요.<br>
+                        게임이 끝나고, 총 음절 수를 비교해요.<br>
+                        상대방보다 적게, 혹은 많게 이어서 승리를 쟁취하세요.<br><br>
+
+                        3. 음절 금지 모드<br><br>
+
+                        시작 전 3개의 금지 음절을 받아요.<br>
+                        이 음절을 피해 끝말을 이어야해요.<br>
+                        상대방이 금지 음절을 말하게 유도하여, 승리를 쟁취하세요.<br><br>
+
+                        4. n번째 피하기 모드<br><br>
+
+                        시작 전 정수 n(30~40)을 제공 받아요.<br>
+                        n번째 음절 말하기를 피하세요.<br>
+                        상대방이 n번째 음절을 말하게 유도하여, 승리를 쟁취하세요.
+                        <br>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
     </div>
     </body>

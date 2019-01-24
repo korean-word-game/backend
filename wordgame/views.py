@@ -40,3 +40,15 @@ class wordgameMain(View):
             self.rDict['error'] = '정확한 정보를 입력해주세요'
 
             return render(req, 'wordgame/main.html', self.rDict)
+
+
+class wordgameIngame(View):
+    rDict = dict(now='main')
+
+    def get(self, req):
+        check_login(req)
+        isLogin, user = auto_login_controller(req)
+
+        rDict = dict(isLogin=isLogin, now='main', user=user)
+        return render(req, 'wordgame/ingame.html', rDict)
+
