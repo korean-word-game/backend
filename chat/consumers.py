@@ -102,7 +102,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 ),
                 self.channel_layer.group_discard(
                     self.room_info,
-                    self.server_name
+                    self.channel_name
                 )
             )
 
