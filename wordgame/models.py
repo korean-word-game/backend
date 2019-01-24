@@ -27,7 +27,7 @@ class Room(models.Model):
         null=True
     )
     how_to_win = models.ForeignKey(
-        Mode,
+        HowToWin,
         on_delete=models.CASCADE,
         blank=True,
         null=True
