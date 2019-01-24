@@ -38,3 +38,21 @@ class Room(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class WordType(models.Model):
+    name = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.name
+
+
+class Word(models.Model):
+    type = models.ForeignKey(WordType, on_delete=models.CASCADE)
+    text = models.TextField()
+    info = models.TextField(blank=True)
+    rank = models.IntegerField()
+    first_char = models.TextField()
+
+    def __str__(self):
+        return self.text
