@@ -10,33 +10,39 @@ from users.models import User
 from wordgame.models import Room
 
 ROOM_INFO = 'room_info'
+ROOM_PEOPLE_LIMIT = 6
+ROOM_EXCEEDED_LIMIT_MSG = '게임에 참가 할 수 없습니다'
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
     group_connected = False
     num_increased = False
     room_info = ROOM_INFO
+    room_name = room_group_name = user = None
 
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
-        self.user = None
 
         session = self.scope['session']
         if session:
             token = session.get('token')
             if token:
                 self.user = User.objects.get(token=token)
-                self.group_connected = True
+                await self.connect_or_raise_if_exceeded_limit()
 
-                try:
-                    # now_people += 1
-                    Room.objects.filter(id=self.room_name).update(now_people=F('now_people') + 1)
-                except:
-                    pass
-                else:
-                    self.num_increased = True
+    async def connect_or_raise_if_exceeded_limit(self):
+        room = Room.objects.get(id=self.room_name)
+        if room.now_people <= ROOM_PEOPLE_LIMIT:
+            try:
+                # now_people += 1
+                Room.objects.filter(id=self.room_name).update(now_people=F('now_people') + 1)
+            except:
+                pass
+            else:
+                self.num_increased = True
 
+            try:
                 # Join room group
                 await asyncio.gather(
                     self.channel_layer.group_add(
@@ -48,10 +54,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         self.channel_name
                     )
                 )
+            except:
+                await self.disconnect(None)
+                return
+            else:
+                self.group_connected = True
 
-                await self.notice_room_entered()
+            await self.notice_room_entered()
 
-                await self.accept()
+            await self.accept()
+
+        else:
+            await self.accept()
+            await self.send_error(ROOM_EXCEEDED_LIMIT_MSG, alert_type=1, action='back')
+            await self.disconnect(None)
+            await self.close()
 
     async def notice_room_entered(self):
         await self.channel_layer.group_send(
@@ -63,7 +80,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def notice_room_exit(self):
-
         await self.channel_layer.group_send(
             self.room_info,
             {
@@ -138,6 +154,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Send message to WebSocket
         await self.send(text_data=json.dumps(json_data))
 
+    async def send_error(self, alert_message, alert_type=1, redirect_url=None, action=None):
+        json_data = {
+            'type': 'error',
+            'alert': alert_message,
+            'alert_type': alert_type,
+        }
+        if redirect_url:
+            json_data['redirect'] = redirect_url
+        if action:
+            json_data['action'] = action
+
+        await self.send_json(json_data)
+
     # Receive message from room group
     async def event_chat_message(self, event):
         await self.send_json({
@@ -167,6 +196,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 class LobbyConsumer(AsyncWebsocketConsumer):
     room_info = ROOM_INFO
+    is_room_info_connected = False
 
     async def connect(self):
         self.user = None
@@ -175,20 +205,26 @@ class LobbyConsumer(AsyncWebsocketConsumer):
         if token:
             self.user = User.objects.get(token=token)
 
-        # Join room group
-        await self.channel_layer.group_add(
-            self.room_info,
-            self.channel_name
-        )
+        try:
+            # Join room group
+            await self.channel_layer.group_add(
+                self.room_info,
+                self.channel_name
+            )
+        except:
+            pass
+        else:
+            self.is_room_info_connected = True
 
-        await self.accept()
+            await self.accept()
 
     async def disconnect(self, close_code):
-        # Leave room group
-        await self.channel_layer.group_discard(
-            self.room_info,
-            self.channel_name
-        )
+        if self.is_room_info_connected:
+            # Leave room group
+            await self.channel_layer.group_discard(
+                self.room_info,
+                self.channel_name
+            )
 
     # Receive message from WebSocket
     async def receive(self, text_data=None, bytes_data=None):
@@ -218,6 +254,19 @@ class LobbyConsumer(AsyncWebsocketConsumer):
             'room_id': room_id,
             'result': changed_data
         })
+
+    async def send_error(self, alert_message, alert_type=1, redirect_url=None, action=None):
+        json_data = {
+            'type': 'error',
+            'alert': alert_message,
+            'alert_type': alert_type,
+        }
+        if redirect_url:
+            json_data['redirect'] = redirect_url
+        if action:
+            json_data['action'] = action
+
+        await self.send_json(json_data)
 
     async def event_get_rooms(self, event=None):
 
