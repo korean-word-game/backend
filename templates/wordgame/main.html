@@ -1,0 +1,78 @@
+{% extends 'wordgame/../util/base.html' %}
+{% block content %}
+    <head>
+        <title>메인</title>
+    </head>
+    <body class="design1">
+    <div class="container">
+        <h1>잇다</h1>
+        <br>
+        {% if isLogin %}
+            <div class="row justify-content-center">
+                <div class="col-9 col-md-6">
+                    <div class="card text-white bg-secondary">
+                        <div class="card-body">
+                            <div class="row justify-content-center">
+                                {{ user.username }}<br>
+                            </div>
+                            <div class="row justify-content-center">
+                                전적 {{ user.win }}승 {{ user.lose }}패
+                            </div>
+                            <br>
+                            <div class="row justify-content-center">
+                                <div class="col-md-7">
+                                </div>
+                                <button onclick="location.href='{% url 'logout' %}'" class="btn btn-warning col-md-4">
+                                    로그아웃
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        {% else %}
+            <div class="row justify-content-center">
+                <div class="col-9 col-md-6 ">
+                    <form action="{% url 'wordgameMain' %}" accept-charset="utf-8" name="login"
+                          method="post"> {% csrf_token %}
+                        <div class="form-group row">
+                            <label for="UserName" class="col-md-4 col-form-label">유저 이름</label>
+                            <div class="col-md-8">
+                                <input type="text" class="form-control" id="exampleFormControlInput1"
+                                       placeholder="홍길동" required name="username">
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+
+                            <label for="inputPassword" class="col-md-4 col-form-label">PIN번호</label>
+                            <div class="col-md-8">
+                                <input type="password" class="form-control" id="inputPassword"
+                                       required name="password" placeholder="Password">
+                            </div>
+                        </div>
+                        <div class="row justify-content-center">
+                            <button type="submit" class="btn btn-success col-md-5">로그인</button>
+                            <div class="col-md-1"></div>
+                            <input type="button" onclick="location.href='{% url 'signup' %}'"
+                                   class="btn btn-warning col-md-5" value="회원가입">
+                        </div>
+
+
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+        <br>
+        <div class="row justify-content-center">
+            <button type="submit" class="btn btn-primary col-9 col-md-6">게임 시작</button>
+        </div>
+        <br>
+
+        <div class="row justify-content-center">
+            <button type="submit" class="btn btn-info col-9 col-md-6">게임 설명</button>
+        </div>
+    </div>
+    </body>
+{% endblock %}

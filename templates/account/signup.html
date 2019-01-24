@@ -1,0 +1,47 @@
+{% extends 'wordgame/../util/base.html' %}
+{% block content %}
+    <head>
+        <title>회원가입</title>
+    </head>
+    <body class="design1">
+    <div class="container">
+        <h1>회원가입</h1>
+        <br>
+        <div class="row justify-content-center">
+            <div class="col-9 col-md-6 ">
+                <form action="{% url 'signup' %}" accept-charset="utf-8" name="signup" method="post"> {% csrf_token %}
+                    <div class="form-group row">
+                        <label for="inputUserName" class="col-md-4 col-form-label">유저 이름</label>
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" id="exampleFormControlInput1"
+                                   placeholder="홍길동" required name="username">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+
+                        <label for="inputPassword" class="col-md-4 col-form-label">PIN번호</label>
+                        <div class="col-md-8">
+                            <input type="password" class="form-control" id="inputPassword"
+                                   required name="password1" placeholder="Password">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+
+                        <label for="inputPassword" class="col-md-4 col-form-label">번호 확인</label>
+                        <div class="col-md-8">
+                            <input type="password" class="form-control" id="inputPassword"
+                                   required name="password2" placeholder="Repeat Password">
+                        </div>
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="col-md-12"></div>
+                        <button type="submit" class="btn btn-success col-md-10">회원가입</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+    </div>
+    </body>
+{% endblock %}
