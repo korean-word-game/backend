@@ -10,10 +10,10 @@ nav {
 
 .design1 {
     text-align: center;
-    margin-bottom: 50px;
+    margin-top: 175px;
 }
 
-.form_design1{
+.form_design1 {
     width: auto;
     border: 2px solid greenyellow;
     padding: 18px;
@@ -21,3 +21,4 @@ nav {
     -moz-border-radius: 7px;
     border-radius: 7px;
 }
+

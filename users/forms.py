@@ -29,7 +29,7 @@ class LoginForm(forms.ModelForm):
     def get_user(self):
         uo = User.objects
 
-        user = uo.get(email=self.data.get('username'))
+        user = uo.get(username=self.data.get('username'))
 
         if check_password(self.data.get('password'), user.password):
             user.token = get_token(user.uuid.urn.__str__())
@@ -96,8 +96,8 @@ class RegisterForm(forms.ModelForm):
 
     def save(self, commit=True):
         uo = User.objects
-        if uo.filter(email=self.data.get('username')).exists():
-            raise SameError('이름')
+        if uo.filter(username=self.data.get('username')).exists():
+            raise SameError('유저 이름')
 
         user = super(RegisterForm, self).save(commit=False)
 

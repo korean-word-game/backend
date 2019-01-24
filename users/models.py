@@ -42,6 +42,16 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=0
     )
 
+    win = models.IntegerField(
+        verbose_name='rate',
+        default=0
+    )
+
+    lose = models.IntegerField(
+        verbose_name='rate',
+        default=0
+    )
+
     objects = UserManager()
 
     USERNAME_FIELD = 'username'

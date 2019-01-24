@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, user-scalable=no">
     {% load staticfiles %}
     <link rel="stylesheet" type="text/css" href="{% static 'wordgame/default.css' %}"/>
-    <link rel="shortcut icon" href="{% static 'idoldb/favicon.ico' %}" type="image/x-icon">
-    <link rel="icon" href="{% static 'idoldb/favicon.ico' %}" type="image/x-icon">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css"
           integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
@@ -21,58 +19,15 @@
 </head>
 <body class="design1">
 
-<nav class="navbar navbar-expand-lg navbar-light text-left" style="background-color: #fd7ff2;">
-
-<a class="navbar-brand" href="{% url 'wordgameMain' %}">잇다</a>
-<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-</button>
-
-<div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
-{#        {% if now == 'main' %}#}
-{#            <li class="nav-item active">#}
-{#                <a class="nav-link" href="{% url 'wordgameMain' %}">메인<span class="sr-only">(current)</span></a>#}
-{#            </li>#}
-{#        {% else %}#}
-{#            <li class="nav-item">#}
-{#                <a class="nav-link" href="{% url 'wordgameMain' %}">메인</a>#}
-{#            </li>#}
-{#        {% endif %}#}
-        <li class="nav-item dropdown">
-            {% if isLogin %}
-                <a class="nav-link dropdown-toggle" href="" id="navbarDropdownMenuLink" data-toggle="dropdown"
-                   aria-haspopup="true" aria-expanded="false">
-                    {{ user.nickname }}
-                </a>
-                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                    <a class="dropdown-item" href="{% url 'logout' %}">로그아웃</a>
-                </div>
-            {% else %}
-                <a class="nav-link dropdown-toggle" href="" id="navbarDropdownMenuLink" data-toggle="dropdown"
-                   aria-haspopup="true" aria-expanded="false">
-                    계정
-                </a>
-                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                    <a class="dropdown-item" href="{% url 'login' %}">로그인</a>
-                    <a class="dropdown-item" href="{% url 'signup' %}">회원가입</a>
-                </div>
-            {% endif %}
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="https://github.com/nonamep765/idolDB_Django" target="_blank">API</a>
-        </li>
-    </ul>
-</div>
-</nav>
-
 {% if error %}
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        <strong>log: </strong> {{ error }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
+    <div class="container">
+        <div class="col-1 col-md-6"></div>
+        <div class="alert alert-warning alert-dismissible fade show col-10 col-md-6" role="alert">
+            <strong>log: </strong> {{ error }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
     </div>
 {% endif %}
 </body>
