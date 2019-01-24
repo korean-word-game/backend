@@ -88,8 +88,9 @@ class makeRoom(View):
             return redirect('wordgameMain')
         room = MakeRoomForm(req.POST)
         room = room.save(commit=True)
-        
+
         # send room_created event
+        room.now_people = 1
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             'room_info',
