@@ -124,6 +124,14 @@ STATICFILES_DIRS = [
     MEDIA_ROOT
 ]
 
+# redis
+REDIS_INFO = config_secret_common['django']['redis']
+REDIS_URI = 'redis://:{redis_pass}@{redis_host}:{redis_port}'.format(
+    redis_host=REDIS_INFO['host'],
+    redis_pass=REDIS_INFO['auth'],
+    redis_port=REDIS_INFO['port']
+)
+
 # channel configs
 ASGI_APPLICATION = 'config.routing.application'
 
@@ -131,14 +139,8 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-
             "hosts": [(
-                'redis://:{redis_pass}@{redis_host}:{redis_port}/{redis_db}'.format(
-                    redis_host='db.xn--2j1b940b.xn--lg3bt3ss6d.com',
-                    redis_pass='dmzteamitda',
-                    redis_port=6379,
-                    redis_db='1'
-                )
+                    REDIS_URI + '/1'  # db: 1
             )],
         },
     },

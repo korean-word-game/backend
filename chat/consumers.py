@@ -8,10 +8,17 @@ from django.db.models import F
 
 from users.models import User
 from wordgame.models import Room
+from config.settings.base import REDIS_URI
+
+from redlock import RedLockFactory
 
 ROOM_INFO = 'room_info'
 ROOM_PEOPLE_LIMIT = 6
 ROOM_EXCEEDED_LIMIT_MSG = '게임에 참가 할 수 없습니다'
+
+redis_lock = RedLockFactory([
+    {'host': REDIS_URI + '/2'}  # db: 2
+])
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
