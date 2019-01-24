@@ -86,13 +86,13 @@
                             </div>
                             <div class="col-6">
                                 <h2 class="mb-2 mt-4">멀티</h2>
-                                <input type="button" onclick="location.href='{% url 'signup' %}'"
+                                <input type="button" onclick="location.href='{% url 'wordgameSearch' 'classic' %}'"
                                        class="btn btn-success col-10 mb-2 mt-2" value="클래식"
                                         {% if not isLogin %}
                                        disabled
                                         {% endif %}
                                 >
-                                <input type="button" onclick="location.href='{% url 'signup' %}'"
+                                <input type="button" onclick="location.href='{% url 'wordgameSearch' 'mission' %}'"
                                        class="btn btn-warning col-10 mb-2 mt-2" value="미션"
                                         {% if not isLogin %}
                                        disabled

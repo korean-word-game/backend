@@ -43,12 +43,26 @@ class wordgameMain(View):
 
 
 class wordgameIngame(View):
-    rDict = dict(now='main')
 
     def get(self, req):
         check_login(req)
         isLogin, user = auto_login_controller(req)
 
-        rDict = dict(isLogin=isLogin, now='main', user=user)
+        rDict = dict(isLogin=isLogin, now='ingame', user=user)
         return render(req, 'wordgame/ingame.html', rDict)
 
+
+class wordgameSearch(View):
+
+    def get(self, req, mode):
+        check_login(req)
+        isLogin, user = auto_login_controller(req)
+        if mode == 'classic':
+            mode = '클래식'
+        elif mode == 'mission':
+            mode = '미션'
+        else:
+            return redirect('wordgameMain')
+
+        rDict = dict(isLogin=isLogin, now='search', user=user, mode=mode)
+        return render(req, 'wordgame/search.html', rDict)

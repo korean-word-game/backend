@@ -30,3 +30,4 @@ class Room(View):
         rDict = dict(isLogin=isLogin, now='main', user=user)
         rDict['room_name']=mark_safe(json.dumps(room_name))
         return render(req, 'chat/room.html', rDict)
+
