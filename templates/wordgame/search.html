@@ -30,6 +30,7 @@
                     let data = JSON.parse(e.data);
                     if (data['type'] === 'room_info_changed') {
                         Object.keys(data['result']).forEach((key) => {
+                            if
                             document.querySelector('#room_' + key + '_' + data['room_id']).innerHTML = data['result'][key];
                             if (key === 'now_people' && data['result']['now_people'] === '6') {
                                 document.querySelector('#room_full_' + data['room_id']).setAttribute('disabled')

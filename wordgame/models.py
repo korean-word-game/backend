@@ -33,7 +33,7 @@ class Room(models.Model):
         null=True
     )
     is_hide = models.BooleanField()
-    now_people = models.IntegerField(default=1)
+    now_people = models.IntegerField(default=0)
     is_start = models.BooleanField(default=False)
 
     def __str__(self):
