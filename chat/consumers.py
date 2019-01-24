@@ -10,14 +10,12 @@ from users.models import User
 from wordgame.models import Room
 
 ROOM_INFO = 'room_info'
-SERVER_NAME = 'alpha'
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
     group_connected = False
     num_increased = False
     room_info = ROOM_INFO
-    server_name = SERVER_NAME
 
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
@@ -156,10 +154,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'user': event['user'],
         })
 
+    async def event_room_created(self, event=None):
+        return
+
 
 class LobbyConsumer(AsyncWebsocketConsumer):
     room_info = ROOM_INFO
-    server_name = SERVER_NAME
 
     async def connect(self):
         self.user = None
@@ -180,7 +180,7 @@ class LobbyConsumer(AsyncWebsocketConsumer):
         # Leave room group
         await self.channel_layer.group_discard(
             self.room_info,
-            self.server_name
+            self.channel_name
         )
 
     # Receive message from WebSocket
@@ -241,3 +241,9 @@ class LobbyConsumer(AsyncWebsocketConsumer):
             event['room_id'],
             {'now_people': Room.objects.get(id=event['room_id']).now_people}
         )
+
+    async def event_room_created(self, event=None):
+        await self.send_json({
+            'type': 'room_created',
+            'result': event['result'],
+        })

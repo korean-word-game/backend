@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.views import View
+from django.core import serializers
 
 from users.forms import LoginForm
 from users.models import User
@@ -12,6 +13,9 @@ from users.views import check_login
 from wordgame.forms import MakeRoomForm
 from wordgame.models import Mode
 from wordgame.utils import auto_login_controller
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 # Create your views here.
@@ -82,9 +86,16 @@ class makeRoom(View):
         isLogin, user = auto_login_controller(req)
         if isLogin is None:
             return redirect('wordgameMain')
-        print(req.POST)
         room = MakeRoomForm(req.POST)
-        room.mode = Mode.objects.get(id=1)
         room = room.save(commit=True)
+        
+        # send room_created event
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            'room_info',
+            {'type': 'event_room_created',
+             'room_id': room.id,
+             'result': serializers.serialize('json', [room])[1:-1]}
+        )
 
         return redirect('room', room.pk)
