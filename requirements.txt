@@ -25,3 +25,4 @@ six==1.12.0
 Twisted==18.9.0
 txaio==18.8.1
 zope.interface==4.6.0
+hgtk==0.1.3
