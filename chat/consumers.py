@@ -38,6 +38,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     self.channel_name
                 )
 
+                # notice room entered
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'event_room_entered',
+                        'user': self.user.username
+                    }
+                )
+
                 await self.accept()
 
     async def disconnect(self, close_code):
@@ -46,6 +55,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
             Room.objects.filter(id=self.room_name).update(now_people=F('now_people') - 1)
 
         if self.group_connected:
+            # notice room exit
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'event_room_exit',
+                    'user': self.user.username
+                }
+            )
+
             # Leave room group
             await self.channel_layer.group_discard(
                 self.room_group_name,
@@ -91,6 +109,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
         models = Room.objects.filter(is_hide=False)
 
         print(serializers.serialize('json', models))
+
+    async def event_room_entered(self, event=None):
+        await self.send_json({
+            'type': 'room_entered',
+            'user': event['user'],
+        })
+
+    async def event_room_exit(self, event=None):
+        await self.send_json({
+            'type': 'room_exit',
+            'user': event['user'],
+        })
 
 
 class LobbyConsumer(AsyncWebsocketConsumer):
