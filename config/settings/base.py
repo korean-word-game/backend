@@ -124,4 +124,22 @@ STATICFILES_DIRS = [
     MEDIA_ROOT
 ]
 
+# channel configs
+ASGI_APPLICATION = 'config.routing.application'
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+
+            "hosts": [(
+                'redis://:{redis_pass}@{redis_host}:{redis_port}/{redis_db}'.format(
+                    redis_host='db.xn--2j1b940b.xn--lg3bt3ss6d.com',
+                    redis_pass='dmzteamitda',
+                    redis_port=6379,
+                    redis_db='1'
+                )
+            )],
+        },
+    },
+}
