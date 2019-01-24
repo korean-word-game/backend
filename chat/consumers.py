@@ -38,18 +38,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     self.num_increased = True
 
                 # Join room group
-
-                # await asyncio.gather(
-                #     self.channel_layer.group_add(
-                #         self.room_group_name,
-                #         self.channel_name
-                #     ),
-                #     self.channel_layer.group_add(
-                #         self.lobby_group_name,
-                #         self.server_name
-                #     )
-                # )
-
                 await asyncio.gather(
                     self.channel_layer.group_add(
                         self.room_info,
@@ -90,9 +78,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
             # now_people -= 1
             Room.objects.filter(id=self.room_name).update(now_people=F('now_people') - 1)
 
+            loop = asyncio.get_event_loop()
+
         if self.group_connected:
             # notice room exit
             await self.notice_room_exit()
+
+            if self.num_increased:
+                await asyncio.sleep(1)
+                row = Room.objects.get(id=self.room_name)
+                room_id = row.id
+                if not row.now_people:
+                    row.delete()
+                    await self.channel_layer.group_send(
+                        self.room_info,
+                        {
+                            'type': 'event_room_discard',
+                            'room_id': room_id
+                        }
+                    )
 
             # Leave room group
             await asyncio.gather(
@@ -155,6 +159,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         })
 
     async def event_room_created(self, event=None):
+        return
+
+    async def event_room_discard(self, event=None):
         return
 
 
@@ -246,4 +253,10 @@ class LobbyConsumer(AsyncWebsocketConsumer):
         await self.send_json({
             'type': 'room_created',
             'result': event['result'],
+        })
+
+    async def event_room_discard(self, event=None):
+        await self.send_json({
+            'type': 'room_discard',
+            'room_id': event['room_id'],
         })
