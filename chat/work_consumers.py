@@ -8,3 +8,10 @@ def hello(message):
 class PrintConsumer(SyncConsumer):
     def test_print(self, message):
         print("Test: " + message["text"])
+
+
+class WorkerConsumer(AsyncConsumer):
+
+    async def event_game_started(self, event):
+        room_id = event['room_id']
+        print('game start!')
