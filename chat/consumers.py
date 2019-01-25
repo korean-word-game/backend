@@ -358,7 +358,7 @@ class LobbyConsumer(AsyncWebsocketConsumer):
             )
 
     async def event_room_exit(self, event=None):
-        num = Room.objects.get(id=event['room_id']).now_people
+        num = await AioRedisQuery.room_user_cnt(event['room_id'])
         if not num:  # if num!=0
             await self.send_room_info_changed(
                 event['room_id'],
