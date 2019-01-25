@@ -97,7 +97,7 @@
 
                                         myselect1.addEventListener('click', () => {
                                             if (my_language_select === 2) {
-                                                my_language_selec = 1
+                                                my_language_select = 1
                                                 chatSocket.send(JSON.stringify({
                                                     'language': 1,
                                                     'type': 'user_changd'
@@ -108,7 +108,7 @@
                                         let myselect2 = document.querySelector('#radious_' + user + "_2")
                                         myselect2.addEventListener('click', () => {
                                             if (my_language_select === 1) {
-                                                my_language_selec = 2
+                                                my_language_select = 2
                                                 chatSocket.send(JSON.stringify({
                                                     'language': 2,
                                                     'type': 'user_changd'
