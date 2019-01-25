@@ -4,9 +4,12 @@
         <title>게임</title>
         <script>
             window.onload = () => {
+                const uuid = '{{ uuid }}';
                 var roomName = '{{ room.title }}';
 
                 let players = []
+
+                let players_layout = document.getElementById('players')
 
                 var chatSocket = new WebSocket(
                     'ws://' + window.location.host +
@@ -19,6 +22,14 @@
                 }
                 console.log(document.getElementById('howtowin'))
                 document.getElementById('howtowin').innerText += howtowin;
+
+                chatSocket.onopen = (e) => {
+                    chatSocket.send(JSON.stringify({
+                        'query': 'game_status',
+                        'type': 'query',
+                        'callback': uuid
+                    }));
+                }
 
                 chatSocket.onmessage = function (e) {
                     var data = JSON.parse(e.data);
@@ -37,6 +48,70 @@
                             'type': 'pong'
                         }));
                     }
+                    if (data['type'] === 'query') {
+                        if (data['callback'] === uuid) {
+                            if (data['query'] === 'game_status') {
+                                data['result']['users'].forEach((user, index, array) => {
+                                    if (user !== '{{ user.username }}') {
+                                        players_layout.innerHTML += "<div id='player_" + user + "' class=\"card col-5 mt-3 ml-2 mr-2\">\n" +
+                                            "                        <div class=\"card-body\">\n" +
+                                            "                            " + user + "\n" +
+                                            "                        </div>\n" +
+                                            "                        <div class=\"form-check disabled\">\n" +
+                                            "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_1\"\n" +
+                                            "                                   value=\"1\" disabled checked>\n" +
+                                            "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
+                                            "                                문화어\n" +
+                                            "                            </label>\n" +
+                                            "                        </div>\n" +
+                                            "                        <div class=\"form-check disabled mb-3\">\n" +
+                                            "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_2\"\n" +
+                                            "                                   value=\"2\" disabled>\n " +
+                                            "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
+                                            "                                표준어\n" +
+                                            "                            </label>\n" +
+                                            "                        </div>\n" +
+                                            "                    </div>"
+                                    } else {
+                                        players_layout.innerHTML += "<div id='player_" + user + "' class=\"card col-5 mt-3 ml-2 mr-2\">\n" +
+                                            "                        <div class=\"card-body\">\n" +
+                                            "                            " + user + "\n" +
+                                            "                        </div>\n" +
+                                            "                        <div class=\"form-check\">\n" +
+                                            "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_1\"\n" +
+                                            "                                   value=\"1\" checked>\n" +
+                                            "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
+                                            "                                문화어\n" +
+                                            "                            </label>\n" +
+                                            "                        </div>\n" +
+                                            "                        <div class=\"form-check mb-3\">\n" +
+                                            "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_2\"\n" +
+                                            "                                   value=\"2\">\n " +
+                                            "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
+                                            "                                표준어\n" +
+                                            "                            </label>\n" +
+                                            "                        </div>\n" +
+                                            "                    </div>"
+                                        let myselect1 = document.querySelector('#radious_' + user + "_1")
+
+                                        myselect1.addEventListener('click', () => {
+                                            chatSocket.send(JSON.stringify({
+                                                'language': 1,
+                                                'type': 'user_changd'
+                                            }));
+                                        })
+                                        let myselect2 = document.querySelector('#radious_' + user + "_2")
+                                        myselect2.addEventListener('click', () => {
+                                            chatSocket.send(JSON.stringify({
+                                                'language': 2,
+                                                'type': 'user_changed'
+                                            }));
+                                        })
+                                    }
+                                })
+                            }
+                        }
+                    }
                     if (data['type'] === 'chat_message') {
                         var message = data['message'];
                         var user = data['user'];
@@ -53,47 +128,31 @@
                         chatlog.innerHTML += user + '님이 입장하셨습니다.' + "<br>";
                         let chatlogscroll = document.getElementById('chat-log-scroll')
                         chatlogscroll.scrollTop = chatlogscroll.scrollHeight;
-                        if(user === '{{ user.username }}'){
-                            document.getElementById('players').innerHTML += "<div id='player_" + user + "' class=\"card col-5 mt-3 ml-2 mr-2\">\n" +
-                            "                        <div class=\"card-body\">\n" +
-                            "                            " + user + "\n" +
-                            "                        </div>\n" +
-                            "                        <div class=\"form-check\">\n" +
-                            "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_1\"\n" +
-                            "                                   value=\"1\" checked>\n" +
-                            "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
-                            "                                문화어\n" +
-                            "                            </label>\n" +
-                            "                        </div>\n" +
-                            "                        <div class=\"form-check mb-3\">\n" +
-                            "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_2\"\n" +
-                            "                                   value=\"2\">\n" +
-                            "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
-                            "                                표준어\n" +
-                            "                            </label>\n" +
-                            "                        </div>\n" +
-                            "                    </div>"
-                        }
-                        else{
-                            document.getElementById('players').innerHTML += "<div id='player_" + user + "' class=\"card col-5 mt-3 ml-2 mr-2\">\n" +
-                            "                        <div class=\"card-body\">\n" +
-                            "                            " + user + "\n" +
-                            "                        </div>\n" +
-                            "                        <div class=\"form-check disabled\">\n" +
-                            "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_1\"\n" +
-                            "                                   value=\"1\" disabled checked>\n" +
-                            "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
-                            "                                문화어\n" +
-                            "                            </label>\n" +
-                            "                        </div>\n" +
-                            "                        <div class=\"form-check disabled mb-3\">\n" +
-                            "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_2\"\n" +
-                            "                                   value=\"2\" disabled>\n " +
-                            "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
-                            "                                표준어\n" +
-                            "                            </label>\n" +
-                            "                        </div>\n" +
-                            "                    </div>"
+                        if (user !== '{{ user.username }}') {
+                            players_layout.innerHTML += "<div id='player_" + user + "' class=\"card col-5 mt-3 ml-2 mr-2\">\n" +
+                                "                        <div class=\"card-body\">\n" +
+                                "                            " + user + "\n" +
+                                "                        </div>\n" +
+                                "                        <div class=\"form-check disabled\">\n" +
+                                "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_1\"\n" +
+                                "                                   value=\"1\" disabled checked>\n" +
+                                "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
+                                "                                문화어\n" +
+                                "                            </label>\n" +
+                                "                        </div>\n" +
+                                "                        <div class=\"form-check disabled mb-3\">\n" +
+                                "                            <input class=\"form-check-input\" type=\"radio\" name=\"radios_" + user + "\" id=\"radious_" + user + "_2\"\n" +
+                                "                                   value=\"2\" disabled>\n " +
+                                "                            <label class=\"form-check-label\" for=\"radios_" + user + "\">\n" +
+                                "                                표준어\n" +
+                                "                            </label>\n" +
+                                "                        </div>\n" +
+                                "                    </div>"
+                        } else {
+                            chatSocket.send(JSON.stringify({
+                                'language': 1,
+                                'type': 'user_changd'
+                            }));
                         }
                         players.push(user)
                         console.log(players)

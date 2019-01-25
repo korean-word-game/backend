@@ -1,3 +1,5 @@
+import uuid
+
 from django.shortcuts import render
 
 # Create your views here.
@@ -22,7 +24,7 @@ class room(View):
         check_login(req)
         isLogin, user = auto_login_controller(req)
 
-        rDict = dict(isLogin=isLogin, now='main', user=user)
+        rDict = dict(isLogin=isLogin, now='main', user=user, uuid=uuid.uuid4())
         room = Room.objects.get(pk=room_name)
         rDict['room'] = room
         rDict['mode'] = True if room.mode == 2 else False
