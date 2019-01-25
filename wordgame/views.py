@@ -16,6 +16,7 @@ from wordgame.utils import auto_login_controller
 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from config.utils import RedisQuery
 
 
 # Create your views here.

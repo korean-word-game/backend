@@ -2,97 +2,44 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 import asyncio
-from contextlib import closing
 
 from django.core import serializers
 from django.db.models import F
 
 from users.models import User
 from wordgame.models import Room
-from config.settings.base import REDIS_URI, REDIS_INFO
-
-from aioredlock import Aioredlock, LockError
-import aioredis
-import redis
+from config.utils import RedisQuery, AioRedisQuery
+from asgiref.sync import sync_to_async, async_to_sync
+from channels.db import database_sync_to_async
 
 ROOM_INFO = 'room_info'
 ROOM_PEOPLE_LIMIT = 6
 ROOM_EXCEEDED_LIMIT_MSG = '게임에 참가 할 수 없습니다'
 ROOM_ALREADY_EXIST_MSG = '이미 게임에 참가 되어있습니다'
 
-redis_pool = redis.ConnectionPool(
-    host=REDIS_INFO['host'],
-    port=REDIS_INFO['port'],
-    db=2,
-    password=REDIS_INFO['auth']
-)
 
-# redis_lock_manager = Aioredlock([
-#     {'host': REDIS_URI + '/2'}  # db: 2
-# ])
-
-_room_lock = {}
-
-
-async def get_redis_lock(name):
-    if not _room_lock.get(name):
-        _room_lock[name] = asyncio.Lock()
-
-    return _room_lock[name]
-
-
-class AioRedisQuery:
-    URI = REDIS_URI + '/2'  # db:2
-
+class QueryResult:
     @staticmethod
-    async def add_user(room_id, username):
-        conn = await aioredis.create_redis_pool(AioRedisQuery.URI)
-        with closing(conn):
-            async with await get_redis_lock(room_id):
-                await conn.hset('room:' + room_id, username, 1)
+    async def game_status(room_id):
+        result = {}
 
-    @staticmethod
-    async def pop_user(room_id, username):
-        conn = await aioredis.create_redis_pool(AioRedisQuery.URI)
-        with closing(conn):
-            async with await get_redis_lock(room_id):
-                return await conn.hdel('room:' + room_id, username)
+        status, users = await asyncio.gather(
+            AioRedisQuery.get_all_game_config(room_id),
+            AioRedisQuery.get_room_users(room_id)
+        )
 
-    @staticmethod
-    async def exist_user(room_id, username):
-        conn = await aioredis.create_redis_pool(AioRedisQuery.URI)
-        with closing(conn):
-            async with await get_redis_lock(room_id):
-                return await conn.hexists('room:' + room_id, username)
+        if status:
+            result.update(status)
+        if users:
+            result['users'] = users
 
-    @staticmethod
-    async def room_user_cnt(room_id):
-        conn = await aioredis.create_redis_pool(AioRedisQuery.URI)
-        with closing(conn):
-            async with await get_redis_lock(room_id):
-                return await conn.hlen('room:' + room_id)
+        room = Room.objects.get(id=room_id)
+        if room:
+            result['is_start'] = room.is_start
+            result['how_to_win_id'] = room.how_to_win_id
+            result['mode_id'] = room.mode_id
 
-
-class RedisQuery:
-    @staticmethod
-    def add_user(room_id, username):
-        conn = redis.Redis(connection_pool=redis_pool)
-        return conn.hset('room:' + room_id, username, 1)
-
-    @staticmethod
-    def pop_user(room_id, username):
-        conn = redis.Redis(connection_pool=redis_pool)
-        return conn.hdel('room:' + room_id, username)
-
-    @staticmethod
-    def exist_user(room_id, username):
-        conn = redis.Redis(connection_pool=redis_pool)
-        return conn.hexists('room:' + room_id, username)
-
-    @staticmethod
-    def room_user_cnt(room_id):
-        conn = redis.Redis(connection_pool=redis_pool)
-        return conn.hlen('room:' + room_id)
+        return result
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -226,6 +173,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 message = text_data_json['message']
                 await self.message_send(message)
 
+            elif command_type == 'query':
+                query = text_data_json['query']
+                callback = text_data_json['callback']
+
+                if query == 'game_status':
+                    await self.send_query_result(
+                        query,
+                        callback,
+                        await QueryResult.game_status(self.room_name)
+                    )
+
             # Send message to room group
 
     async def message_send(self, message):
@@ -256,6 +214,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.send_json(json_data)
 
+    async def send_query_result(self, query, callback, result):
+        await self.send_json({
+            'type': 'query',
+            'query': query,
+            'callback': callback,
+            'result': result
+        })
+
     # Receive message from room group
     async def event_chat_message(self, event):
         await self.send_json({
@@ -265,6 +231,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         })
 
     async def event_room_entered(self, event=None):
+        await self.channel_layer.send(
+            'test-worker',
+            {
+                'type': 'test_print',
+                'text': 'helloo!!!'
+            }
+        )
+
         await self.send_json({
             'type': 'room_entered',
             'user': event['user'],
@@ -402,3 +376,7 @@ class LobbyConsumer(AsyncWebsocketConsumer):
             'type': 'room_discard',
             'room_id': event['room_id'],
         })
+
+
+if __name__ == '__main__':
+    print(async_to_sync(QueryResult.game_status)(13))
