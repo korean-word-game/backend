@@ -167,7 +167,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if text_data:
             text_data_json = json.loads(text_data)
             print('receive data:', [text_data_json])
-            command_type = text_data_json.get('type')
+            command_type = text_data_json.pop('type')
 
             if command_type == 'chat_message':
                 message = text_data_json['message']
@@ -183,6 +183,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         callback,
                         await QueryResult.game_status(self.room_name)
                     )
+
+            elif command_type == 'user_changed':
+                await self.user_data_changed(text_data_json)
 
             # Send message to room group
 
@@ -221,6 +224,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'callback': callback,
             'result': result
         })
+
+    async def user_data_changed(self, data: dict):
+        queries = [AioRedisQuery.set_game_config(self.room_name, k, v) for k, v in data.items()]
+        await asyncio.gather(*queries)
 
     # Receive message from room group
     async def event_chat_message(self, event):

@@ -84,6 +84,12 @@ class AioRedisQuery:
         with closing(conn):
             return await conn.lrange('room:' + room_id, 0, -1)
 
+    @staticmethod
+    async def set_game_config(room_id, key, value):
+        conn = await aioredis.create_redis_pool(AioRedisQuery.URI, encoding='utf-8')
+        with closing(conn):
+            return await conn.hset('game:' + room_id, key, value)
+
 
 class RedisQuery:
     @staticmethod
