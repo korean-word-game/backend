@@ -165,8 +165,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Receive message from WebSocket
     async def receive(self, text_data=None, bytes_data=None):
         if text_data:
+            print('receive data:', [text_data])
             text_data_json = json.loads(text_data)
-            print('receive data:', [text_data_json])
+
             command_type = text_data_json.pop('type')
 
             if command_type == 'chat_message':
@@ -200,9 +201,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def send_json(self, json_data):
-        print('send data:', json_data)
+        text_data = json.dumps(json_data)
+        print('send data:', text_data)
         # Send message to WebSocket
-        await self.send(text_data=json.dumps(json_data))
+        await self.send(text_data=text_data)
 
     async def send_error(self, alert_message, alert_type=1, redirect_url=None, action=None):
         json_data = {
@@ -299,8 +301,9 @@ class LobbyConsumer(AsyncWebsocketConsumer):
     # Receive message from WebSocket
     async def receive(self, text_data=None, bytes_data=None):
         if text_data:
+            print('[lobby] receive data:', [text_data])
             text_data_json = json.loads(text_data)
-            print('[lobby] receive data:', [text_data_json])
+
             command_type = text_data_json.get('type')
 
             if command_type == 'query':
@@ -314,9 +317,10 @@ class LobbyConsumer(AsyncWebsocketConsumer):
             # Send message to room group
 
     async def send_json(self, json_data):
-        print('[lobby] send data:', json_data)
+        text_data = json.dumps(json_data)
+        print('[lobby] send data:', text_data)
         # Send message to WebSocket
-        await self.send(text_data=json.dumps(json_data))
+        await self.send(text_data=text_data)
 
     async def send_room_info_changed(self, room_id, changed_data):
         await self.send_json({
